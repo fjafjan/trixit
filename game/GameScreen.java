@@ -46,10 +46,10 @@ public class GameScreen extends Screen {
 		ballVY = 0;
 		
 		paint = new Paint();
-		paint.setTextSize(30);
+		paint.setTextSize(60);
 		paint.setTextAlign(Paint.Align.CENTER);
 		paint.setAntiAlias(true);
-	}
+	} 
 
 	@Override
 	public void update(float deltaTime) {
@@ -69,6 +69,7 @@ public class GameScreen extends Screen {
 	// Simply lets the user touch the screen to start the game. 
 	private void updateReady(List<TouchEvent> touchEvents) {
 		if (touchEvents.size() > 0){
+			Log.w("Debuggin", "Game is now running");
 			state = GameState.Running;
 		}
 		
@@ -88,11 +89,13 @@ public class GameScreen extends Screen {
 				// atm this is the only thing we care about?
 			}
 		}
-		ballVY -= 0.1;
+		Log.w("Debuggin", "Our ball is at " + ballY);
+
+		ballVY += 0.1; // Some kind of gravity. 
 		ballX = ballX + ballVX;
 		ballY = ballY + ballVY;
 		
-		if(ballY < 0){ // If the ball touches the ground we lose!
+		if(ballY > 1000){ // If the ball touches the ground we lose!
 			state = GameState.GameOver;
 		}
 	}
@@ -111,16 +114,16 @@ public class GameScreen extends Screen {
 
 	@Override
 	public void paint(float deltaTime) {
-		Graphics g = game.getGraphics();
-		
 		switch (state) {
 		case Ready: 
 			drawReadyUI();
 			break;
 		case Running:
 			drawRunningUI();
+			break;
 		case GameOver:
 			drawGameOverUI();
+			break;
 		default:
 			break;
 		}
@@ -134,13 +137,15 @@ public class GameScreen extends Screen {
 	private void drawReadyUI() {
 		Graphics g = game.getGraphics();
 		
-		g.drawARGB(155, 0, 0, 0);
+		//g.drawARGB(155, 0, 0, 0);
 		g.drawString("Click to begin", 640, 300, paint);
 		g.drawImage(Assets.ball, (int) ballX,(int) ballY);
 	}
 
 	private void drawRunningUI() {
 		Graphics g = game.getGraphics();
+		g.drawImage(Assets.ball, (int) ballX,(int) ballY);
+
 	}
 
 
