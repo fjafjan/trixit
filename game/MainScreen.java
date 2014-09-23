@@ -23,6 +23,8 @@ public class MainScreen extends Screen {
 		int len = touchEvents.size();
 		for(int i = 0 ; i < len ; i++){
 			TouchEvent event = touchEvents.get(i);
+			Log.w("Debuggin", "We get touched at " + event.x + " " + event.y);
+
 			// For some reason I am unable to detect TOUCH_UP events. 
 			if (event.type == TouchEvent.TOUCH_DOWN){
 				if (inBounds(event, 0, 0, 250, 250)){
