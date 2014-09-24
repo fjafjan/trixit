@@ -29,19 +29,24 @@ public class GameScreen extends Screen {
 	GameState state = GameState.Ready;
 
 	// Create game objects here....
-	int livesleft = 1;
 	Paint paint;
+	
+	int livesleft = 1;
+	int nrOfBalls = 1;
+	
 	int ballSize;
+	List<Double> ballsX, ballsY;
 	double ballX, ballY;
 	double ballVX, ballVY;
 	double minXPos, maxXPos, minYPos, maxYPos;
-	double bounceCoef;
+	double bounceCoef, ballWeight;
 	int gameHeight, gameWidth;
 	
 	public GameScreen(Game game){
 		super(game);
 		ballSize = 100;
 		bounceCoef = 0.7;
+		ballWeight = 10;
 		livesleft = 5;
 		gameHeight = game.getGraphics().getHeight();
 		gameWidth =game.getGraphics().getWidth();
@@ -93,9 +98,8 @@ public class GameScreen extends Screen {
 					// This already assumes that the bPos represents the center
 					double xDiff = ballX - event.x;
 					double yDiff = ballY - event.y;
-					// f = x-xk/|x-xk|
-					double xForce = 10 * xDiff / Math.sqrt((xDiff*xDiff) + (yDiff*yDiff));
-					double yForce = 10 * yDiff / Math.sqrt((xDiff*xDiff) + (yDiff*yDiff));
+					double xForce = ballWeight * xDiff / Math.sqrt((xDiff*xDiff) + (yDiff*yDiff));
+					double yForce = ballWeight * yDiff / Math.sqrt((xDiff*xDiff) + (yDiff*yDiff));
 					// Change the 0.01 constant to be weight, make sure that the directons
 					// are actually correct... just try it out. 
 					ballVX += xForce;
@@ -113,44 +117,47 @@ public class GameScreen extends Screen {
 
 	private void updateBall(){
 		ballVY += 0.1; // Some kind of gravity. 
-		
-		ballX += ballVX;
-		ballY += ballVY;
-		
-		if(ballX < ballSize/2){
-			double overstep = (ballSize/2 - ballX);
-			ballX = ballSize/2 + overstep ;
-			ballVX *= -bounceCoef;
-		}else if(ballX > gameWidth - (ballSize/2)){
-			// overstep represent the amount the ball has went outside the 
-			// game area.
-			double overstep = (ballX - gameWidth + (ballSize/2));
-			ballX = gameWidth - (ballSize/2) - overstep;
-			ballVX *= -bounceCoef;
-		}
 
-		if(ballY < ballSize/2){
-			double overstep = (ballSize/2 - ballY);
-			ballY = ballSize/2 + overstep;
-			ballVY *= -bounceCoef;
-		
-		}else if(ballY > gameHeight - (ballSize/2)){
-			//Log.w("Debuggin", "We are bouncing, position pre bounce is " + ballY);
-			double overstep = (ballY - gameHeight + (ballSize/2));
-			ballY = gameHeight- (ballSize/2) - overstep;
-			//Log.w("Debuggin", "We are bouncing, position pre bounce is " + ballY);
-			ballVY *= -bounceCoef;
-			livesleft -= 1;
-			if (livesleft == 0)
-				state = GameState.GameOver;
-		}		
+		for(int i=0 ; i < nrOfBalls ; i++){
+			ballX = ballsX.get(i);
+			ballX += ballVX;
+			ballY += ballVY;
+			
+			if(ballX < ballSize/2){
+				double overstep = (ballSize/2 - ballX);
+				ballX = ballSize/2 + overstep ;
+				ballVX *= -bounceCoef;
+			}else if(ballX > gameWidth - (ballSize/2)){
+				// overstep represent the amount the ball has went outside the 
+				// game area.
+				double overstep = (ballX - gameWidth + (ballSize/2));
+				ballX = gameWidth - (ballSize/2) - overstep;
+				ballVX *= -bounceCoef;
+			}
+	
+			if(ballY < ballSize/2){
+				double overstep = (ballSize/2 - ballY);
+				ballY = ballSize/2 + overstep;
+				ballVY *= -bounceCoef;
+			
+			}else if(ballY > gameHeight - (ballSize/2)){
+				//Log.w("Debuggin", "We are bouncing, position pre bounce is " + ballY);
+				double overstep = (ballY - gameHeight + (ballSize/2));
+				ballY = gameHeight- (ballSize/2) - overstep;
+				//Log.w("Debuggin", "We are bouncing, position pre bounce is " + ballY);
+				ballVY *= -bounceCoef;
+				livesleft -= 1;
+				if (livesleft == 0)
+					state = GameState.GameOver;
+			}		
+		}
 	}
 	
 	private boolean inBall(int x, int y){
 		// should change this to a for loop when multiple balls are implemented. 
 		// I should replace ball with "spheroid game object" for the sake of everyone involved. 
-		return (x > ballX - ballSize/2&& x < ballX + ballSize/2 
-				&& y > ballY - ballSize/2&& y < ballY + ballSize + ballSize/2);
+		return (x > ballX - ballSize/2 && x < ballX + ballSize/2 
+				&& y > ballY - ballSize/2 && y < ballY + ballSize + ballSize/2);
 	}
 	
 	private void updateGameOver(List<TouchEvent> touchEvents) {
@@ -189,8 +196,7 @@ public class GameScreen extends Screen {
 
 	private void drawReadyUI() {
 		Graphics g = game.getGraphics();
-		
-		//g.drawARGB(155, 0, 0, 0);
+
 		g.drawString("Click to begin", 640, 300, paint);
 		g.drawImage(Assets.ball, (int) ballX,(int) ballY);
 
