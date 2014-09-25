@@ -7,7 +7,9 @@ package com.trixit.game;
 
 
 
+import java.util.Iterator;
 import java.util.List;
+import java.util.ArrayList;
 
 import android.graphics.Paint;
 import android.graphics.Color;
@@ -17,6 +19,7 @@ import com.trixit.framework.Screen;
 import com.trixit.framework.Game;
 import com.trixit.framework.Graphics;
 import com.trixit.framework.Input.TouchEvent;
+import com.trixit.game.Ball;
 //import java.util.
 
 
@@ -35,33 +38,27 @@ public class GameScreen extends Screen {
 	int nrOfBalls = 1;
 	
 	int ballSize;
-	List<Double> ballsX, ballsY;
-	double ballX, ballY;
-	double ballVX, ballVY;
+	List<Ball> balls;
 	double minXPos, maxXPos, minYPos, maxYPos;
-	double bounceCoef, ballWeight;
 	int gameHeight, gameWidth;
 	
 	public GameScreen(Game game){
 		super(game);
 		ballSize = 100;
-		bounceCoef = 0.7;
-		ballWeight = 10;
 		livesleft = 5;
 		gameHeight = game.getGraphics().getHeight();
 		gameWidth =game.getGraphics().getWidth();
-		
+		balls = new ArrayList<Ball>();
+		balls.add(new Ball(gameWidth/2, gameHeight/2, 0,0));
 		// Initialize game object here
 		// We start with a single ball at.. some random position on the screen?
 		// I should implement a position/couple class.
-		ballX = gameWidth/2;
-		ballY = gameHeight/2;
-		ballVX = 0;
-		ballVY = 0;
+//		ballX = gameWidth/2;
+//		ballY = gameHeight/2;
 		
 		
 		paint = new Paint();
-		paint.setTextSize(60);
+		paint.setTextSize(30);
 		paint.setTextAlign(Paint.Align.CENTER);
 		paint.setAntiAlias(true);
 	} 
@@ -94,70 +91,69 @@ public class GameScreen extends Screen {
 		for (int i = 0; i < len; i++) {
 			TouchEvent event = touchEvents.get(i);
 			if (event.type == TouchEvent.TOUCH_DOWN){
-				if (inBall(event.x, event.y)){
+				int ballTouched = inBall(event.x, event.y); 
+				if (ballTouched != -1){
 					// This already assumes that the bPos represents the center
-					double xDiff = ballX - event.x;
-					double yDiff = ballY - event.y;
-					double xForce = ballWeight * xDiff / Math.sqrt((xDiff*xDiff) + (yDiff*yDiff));
-					double yForce = ballWeight * yDiff / Math.sqrt((xDiff*xDiff) + (yDiff*yDiff));
+					double xDiff = balls.get(ballTouched).getX() - event.x;
+					double yDiff = balls.get(ballTouched).getY() - event.y;
+					double xForce = xDiff / Math.sqrt((xDiff*xDiff) + (yDiff*yDiff));
+					double yForce = yDiff / Math.sqrt((xDiff*xDiff) + (yDiff*yDiff));
 					// Change the 0.01 constant to be weight, make sure that the directons
 					// are actually correct... just try it out. 
-					ballVX += xForce;
-					ballVY += yForce;
+					balls.get(ballTouched).updateForce(xForce, yForce); 
 					Log.w("Debuggin", "We touch the ball, the resulting force is " + xForce + " " + yForce);
 				}
 			}
 		}
 		updateBall();
-		
-		
-		
-		
 	}
 
 	private void updateBall(){
-		ballVY += 0.1; // Some kind of gravity. 
-
 		for(int i=0 ; i < nrOfBalls ; i++){
-			ballX = ballsX.get(i);
-			ballX += ballVX;
-			ballY += ballVY;
-			
-			if(ballX < ballSize/2){
-				double overstep = (ballSize/2 - ballX);
-				ballX = ballSize/2 + overstep ;
-				ballVX *= -bounceCoef;
-			}else if(ballX > gameWidth - (ballSize/2)){
+			balls.get(i).update();
+			double xPos = balls.get(i).getX();
+			double yPos = balls.get(i).getY();
+			if(xPos < ballSize/2){
+				double overstep = (ballSize/2 - xPos);
+				xPos = ballSize/2 + overstep ;
+				balls.get(i).bounceX(xPos);
+			}else if(xPos > gameWidth - (ballSize/2)){
 				// overstep represent the amount the ball has went outside the 
 				// game area.
-				double overstep = (ballX - gameWidth + (ballSize/2));
-				ballX = gameWidth - (ballSize/2) - overstep;
-				ballVX *= -bounceCoef;
+				double overstep = (xPos - gameWidth + (ballSize/2));
+				xPos = gameWidth - (ballSize/2) - overstep;
+				balls.get(i).bounceX(xPos);
 			}
 	
-			if(ballY < ballSize/2){
-				double overstep = (ballSize/2 - ballY);
-				ballY = ballSize/2 + overstep;
-				ballVY *= -bounceCoef;
-			
-			}else if(ballY > gameHeight - (ballSize/2)){
-				//Log.w("Debuggin", "We are bouncing, position pre bounce is " + ballY);
-				double overstep = (ballY - gameHeight + (ballSize/2));
-				ballY = gameHeight- (ballSize/2) - overstep;
-				//Log.w("Debuggin", "We are bouncing, position pre bounce is " + ballY);
-				ballVY *= -bounceCoef;
+			if(yPos < ballSize/2){
+				double overstep = (ballSize/2 - yPos);
+				yPos = ballSize/2 + overstep;
+				balls.get(i).bounceY(yPos);			
+			}else if(yPos > gameHeight - (ballSize/2)){
+				double overstep = (yPos - gameHeight + (ballSize/2));
+				yPos = gameHeight- (ballSize/2) - overstep;
+				balls.get(i).bounceY(yPos);
 				livesleft -= 1;
-				if (livesleft == 0)
+				if (livesleft == 0){
+					Log.w("Debuggin", "Game is over :(");
 					state = GameState.GameOver;
+				}
 			}		
 		}
 	}
 	
-	private boolean inBall(int x, int y){
+	private int inBall(int x, int y){
 		// should change this to a for loop when multiple balls are implemented. 
-		// I should replace ball with "spheroid game object" for the sake of everyone involved. 
-		return (x > ballX - ballSize/2 && x < ballX + ballSize/2 
-				&& y > ballY - ballSize/2 && y < ballY + ballSize + ballSize/2);
+		// I should replace ball with "spheroid game object" for the sake of everyone involved.
+		double posX, posY;
+		for (int i = 0; i < balls.size(); i++) {
+			posX = balls.get(i).getX();
+			posY = balls.get(i).getY();
+			if (x > posX - ballSize/2 && x < posX + ballSize/2 
+					&& y > posY - ballSize/2 && y < posY + ballSize + ballSize/2)
+				return i;
+		}
+		return -1;
 	}
 	
 	private void updateGameOver(List<TouchEvent> touchEvents) {
@@ -198,14 +194,21 @@ public class GameScreen extends Screen {
 		Graphics g = game.getGraphics();
 
 		g.drawString("Click to begin", 640, 300, paint);
-		g.drawImage(Assets.ball, (int) ballX,(int) ballY);
+		for (int i = 0; i < balls.size(); i++) {
+			g.drawImage(Assets.ball, (int) balls.get(i).getX(),(int) balls.get(i).getY());			
+		}
 
 	}
 
 	private void drawRunningUI() {
 		Graphics g = game.getGraphics();
 		g.clearScreen(0);
-		g.drawImage(Assets.ball, (int) ballX - (ballSize/2),(int) ballY - (ballSize/2));		
+		
+		for (int i = 0; i < balls.size(); i++) {
+			int ballX = (int) balls.get(i).getX() - (ballSize/2);
+			int ballY = (int)  balls.get(i).getY() - (ballSize/2);
+			g.drawImage(Assets.ball, ballX, ballY);			
+		}
 	}
 
     private void drawGameOverUI() {
