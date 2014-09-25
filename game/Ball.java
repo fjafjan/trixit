@@ -37,7 +37,6 @@ public class Ball {
 	}
 	
 	public void update(){
-		Log.w("Debuggin", "Ball is at pos " + xPos + " " + yPos);
 		xPos += xVel;
 		yPos += yVel;
 		yVel += gravity;
@@ -57,16 +56,20 @@ public class Ball {
 		// v' = v + atm constant mass factor * v1 - v2 dot x1 - x2 / r^2 * x1 - x2
 		double xPosDiff = xPos - otherBall.xPos;
 		double xVelDiff = xVel - otherBall.xVel;
+		
 		double yPosDiff = yPos - otherBall.yPos;
 		double yVelDiff = yVel - otherBall.yVel;
 		
 		double innerX = (xVelDiff) * (xPosDiff);
 		double innerY = (yVelDiff) * (yPosDiff);
-		
+		double innerTot = innerX + innerY;
+		double dist = (xPosDiff * xPosDiff ) + (yPosDiff * yPosDiff); 
 		double massFactor = 1.;
 		// The size factor is weird but lets see how it works at least
-		xVel += massFactor * innerX * xPosDiff / (size*size);
-		yVel += massFactor * innerY * yPosDiff / (size*size);
-		// This aint ez. 
+		Log.w("Debuggin", "Pre collisions we have vel " + xVel + " " + yVel);
+		
+		xVel -= massFactor * innerTot * xPosDiff / dist;
+		yVel -= massFactor * innerTot * yPosDiff / dist; 
+		Log.w("Debuggin", "Ppost collisions we have vel " + xVel + " " + yVel);
 	}
 }

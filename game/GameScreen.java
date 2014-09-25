@@ -44,7 +44,7 @@ public class GameScreen extends Screen {
 	public GameScreen(Game game){
 		super(game);
 		ballSize = 100;
-		livesleft = 5;
+		livesleft = 10;
 		score = 0;
 		gameHeight = game.getGraphics().getHeight();
 		gameWidth =game.getGraphics().getWidth();
@@ -75,7 +75,7 @@ public class GameScreen extends Screen {
 
 		// I think there should only be two states, either running or game over. No 
 		// menues and shit, smooth user experience!
-		if( score > (10*balls.size()) ){
+		if( score > (3*balls.size()) ){
 			balls.add(new Ball(gameWidth/2, gameHeight/2,0,0));
 		}
 		if (state == GameState.Ready)
@@ -119,18 +119,23 @@ public class GameScreen extends Screen {
 	}
 
 	private void updateBall(){
+		double collisions = 0;
 		for(int i=0 ; i < balls.size() ; i++){
 			balls.get(i).update();
 			double xPos = balls.get(i).getX();
 			double yPos = balls.get(i).getY();
 			// We check for collisions
 			for(int j=i+1 ; j < balls.size() ; j++){
+				collisions += 1;
 				double xPos2 = balls.get(j).getX();
 				double yPos2 = balls.get(j).getY();
 				double dist = Math.sqrt((xPos2 - xPos)*(xPos2 - xPos) + (yPos2 - yPos)*(yPos2 - yPos)); 
 				if( dist < ballSize ){
 					balls.get(i).collide(balls.get(j));
 					balls.get(j).collide(balls.get(i));
+					balls.get(i).update();
+					balls.get(j).update();					
+					Log.w("Debuggin", "This round we have had " + collisions + "collisions");
 				}
 			}
 			
