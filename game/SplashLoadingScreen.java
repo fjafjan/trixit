@@ -20,7 +20,7 @@ public class SplashLoadingScreen extends Screen {
 		
 		Graphics g = game.getGraphics();
 		Assets.menu = g.newImage("menu.jpg", ImageFormat.RGB565);
-		Assets.ball = g.newImage("ball.png", ImageFormat.RGB565);
+		Assets.ball = g.newImage("ball.png", ImageFormat.ARGB4444);
 		Assets.click = game.getAudio().createSound("explosion.ogg");
 		
 		game.setScreen(new MainScreen(game));

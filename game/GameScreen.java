@@ -41,6 +41,9 @@ public class GameScreen extends Screen {
 	double minXPos, maxXPos, minYPos, maxYPos;
 	int gameHeight, gameWidth;
 	
+	
+	//debugging variable/s
+	boolean collided = false;
 	public GameScreen(Game game){
 		super(game);
 		ballSize = 100;
@@ -126,16 +129,14 @@ public class GameScreen extends Screen {
 			double yPos = balls.get(i).getY();
 			// We check for collisions
 			for(int j=i+1 ; j < balls.size() ; j++){
-				collisions += 1;
 				double xPos2 = balls.get(j).getX();
 				double yPos2 = balls.get(j).getY();
 				double dist = Math.sqrt((xPos2 - xPos)*(xPos2 - xPos) + (yPos2 - yPos)*(yPos2 - yPos)); 
-				if( dist < ballSize ){
+				if( dist < ballSize){
+					collisions += 1;
 					balls.get(i).collide(balls.get(j));
-					balls.get(j).collide(balls.get(i));
-					balls.get(i).update();
-					balls.get(j).update();					
 					Log.w("Debuggin", "This round we have had " + collisions + "collisions");
+//					collided = true;
 				}
 			}
 			
