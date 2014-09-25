@@ -32,10 +32,9 @@ public class GameScreen extends Screen {
 	GameState state = GameState.Ready;
 
 	// Create game objects here....
-	Paint paint;
+	Paint paint, paint2;
 	
-	int livesleft = 1;
-	int nrOfBalls = 1;
+	int score, livesleft;
 	
 	int ballSize;
 	List<Ball> balls;
@@ -46,6 +45,7 @@ public class GameScreen extends Screen {
 		super(game);
 		ballSize = 100;
 		livesleft = 5;
+		score = 0;
 		gameHeight = game.getGraphics().getHeight();
 		gameWidth =game.getGraphics().getWidth();
 		balls = new ArrayList<Ball>();
@@ -61,6 +61,12 @@ public class GameScreen extends Screen {
 		paint.setTextSize(30);
 		paint.setTextAlign(Paint.Align.CENTER);
 		paint.setAntiAlias(true);
+		
+		paint2 = new Paint();
+		paint2.setTextSize(100);
+		paint2.setTextAlign(Paint.Align.CENTER);
+		paint2.setAntiAlias(true);
+		paint2.setColor(Color.WHITE);
 	} 
 
 	@Override
@@ -69,6 +75,9 @@ public class GameScreen extends Screen {
 
 		// I think there should only be two states, either running or game over. No 
 		// menues and shit, smooth user experience!
+		if( score > (10*balls.size()) ){
+			balls.add(new Ball(gameWidth/2, gameHeight/2,0,0));
+		}
 		if (state == GameState.Ready)
 			updateReady(touchEvents);
 		if (state == GameState.Running)
@@ -93,6 +102,7 @@ public class GameScreen extends Screen {
 			if (event.type == TouchEvent.TOUCH_DOWN){
 				int ballTouched = inBall(event.x, event.y); 
 				if (ballTouched != -1){
+					score += 1;
 					// This already assumes that the bPos represents the center
 					double xDiff = balls.get(ballTouched).getX() - event.x;
 					double yDiff = balls.get(ballTouched).getY() - event.y;
@@ -109,10 +119,21 @@ public class GameScreen extends Screen {
 	}
 
 	private void updateBall(){
-		for(int i=0 ; i < nrOfBalls ; i++){
+		for(int i=0 ; i < balls.size() ; i++){
 			balls.get(i).update();
 			double xPos = balls.get(i).getX();
 			double yPos = balls.get(i).getY();
+			// We check for collisions
+			for(int j=i+1 ; j < balls.size() ; j++){
+				double xPos2 = balls.get(j).getX();
+				double yPos2 = balls.get(j).getY();
+				double dist = Math.sqrt((xPos2 - xPos)*(xPos2 - xPos) + (yPos2 - yPos)*(yPos2 - yPos)); 
+				if( dist < ballSize ){
+					balls.get(i).collide(balls.get(j));
+					balls.get(j).collide(balls.get(i));
+				}
+			}
+			
 			if(xPos < ballSize/2){
 				double overstep = (ballSize/2 - xPos);
 				xPos = ballSize/2 + overstep ;
@@ -204,6 +225,7 @@ public class GameScreen extends Screen {
 		Graphics g = game.getGraphics();
 		g.clearScreen(0);
 		
+		g.drawString("Score : " + score, gameWidth - 300, 150, paint2);
 		for (int i = 0; i < balls.size(); i++) {
 			int ballX = (int) balls.get(i).getX() - (ballSize/2);
 			int ballY = (int)  balls.get(i).getY() - (ballSize/2);
@@ -214,7 +236,7 @@ public class GameScreen extends Screen {
     private void drawGameOverUI() {
         Graphics g = game.getGraphics();
         g.drawRect(0, 0, 1281, 801, Color.BLACK);
-        g.drawString("GAME OVER.", 640, 300, paint);
+        g.drawString("GAME OVER.", gameWidth/2, gameHeight/2, paint2);
     }
 
 	@Override

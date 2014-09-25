@@ -8,7 +8,7 @@ public class Ball {
 	private double xPos, yPos, xVel, yVel;
 	
 	
-	double size, bounceCoef, weight, gravity;
+	public double size, bounceCoef, weight, gravity;
 	public Ball(double xPos,double yPos, double xVel, double yVel){
 		this.xPos = xPos;
 		this.yPos = yPos;
@@ -16,7 +16,7 @@ public class Ball {
 		this.yVel = yVel;
 		size = 100; // I don't really make sure that this matches the size of the image right?
 		bounceCoef = 0.7;
-		weight = 1./10.;
+		weight = 1./20.;
 		gravity = 0.5;
 	}
 	
@@ -53,4 +53,20 @@ public class Ball {
 		yVel *= -bounceCoef;
 	}
 
+	public void collide(Ball otherBall){
+		// v' = v + atm constant mass factor * v1 - v2 dot x1 - x2 / r^2 * x1 - x2
+		double xPosDiff = xPos - otherBall.xPos;
+		double xVelDiff = xVel - otherBall.xVel;
+		double yPosDiff = yPos - otherBall.yPos;
+		double yVelDiff = yVel - otherBall.yVel;
+		
+		double innerX = (xVelDiff) * (xPosDiff);
+		double innerY = (yVelDiff) * (yPosDiff);
+		
+		double massFactor = 1.;
+		// The size factor is weird but lets see how it works at least
+		xVel += massFactor * innerX * xPosDiff / (size*size);
+		yVel += massFactor * innerY * yPosDiff / (size*size);
+		// This aint ez. 
+	}
 }
