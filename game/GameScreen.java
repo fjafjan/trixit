@@ -7,9 +7,9 @@ package com.trixit.game;
 
 
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Random;
 
 import android.graphics.Paint;
 import android.graphics.Color;
@@ -20,6 +20,7 @@ import com.trixit.framework.Game;
 import com.trixit.framework.Graphics;
 import com.trixit.framework.Input.TouchEvent;
 import com.trixit.game.Ball;
+import com.trixit.game.TennisBall;
 //import java.util.
 
 
@@ -28,7 +29,7 @@ public class GameScreen extends Screen {
 	enum GameState{
 		Ready, Running, Paused, GameOver
 	}
-	
+	Random random = new Random();
 	GameState state = GameState.Ready;
 
 	// Create game objects here....
@@ -38,7 +39,8 @@ public class GameScreen extends Screen {
 	
 	int ballSize;
 	List<Ball> balls;
-	double minXPos, maxXPos, minYPos, maxYPos;
+	TennisBall tennisball;
+	double minXPos, maxXPos, minYPos, maxYPos, chanceOfMod;
 	int gameHeight, gameWidth;
 	
 	
@@ -48,6 +50,7 @@ public class GameScreen extends Screen {
 		super(game);
 		ballSize = 100;
 		livesleft = 10;
+		chanceOfMod = 0.1;
 		score = 0;
 		gameHeight = game.getGraphics().getHeight();
 		gameWidth =game.getGraphics().getWidth();
@@ -78,13 +81,13 @@ public class GameScreen extends Screen {
 
 		// I think there should only be two states, either running or game over. No 
 		// menues and shit, smooth user experience!
-		if( score > (3*balls.size()) ){
-			balls.add(new Ball(gameWidth/2, gameHeight/2,0,0));
+		if( score > (20*balls.size()) ){
+			addBall();
 		}
 		if (state == GameState.Ready)
 			updateReady(touchEvents);
 		if (state == GameState.Running)
-			updateRunning(touchEvents);
+			updateRunning(touchEvents, deltaTime);
 		if (state == GameState.GameOver)
 			updateGameOver(touchEvents);
 	}
@@ -98,14 +101,17 @@ public class GameScreen extends Screen {
 		
 	}
 
-	private void updateRunning(List<TouchEvent> touchEvents) {
+	private void updateRunning(List<TouchEvent> touchEvents, double deltaTime) {
 		int len =  touchEvents.size();
 		for (int i = 0; i < len; i++) {
 			TouchEvent event = touchEvents.get(i);
 			if (event.type == TouchEvent.TOUCH_DOWN){
-				int ballTouched = inBall(event.x, event.y); 
+				int ballTouched = inBall(event.x, event.y, 0); 
 				if (ballTouched != -1){
 					score += 1;
+					if (random.nextDouble() < chanceOfMod){
+						addTennisBall();
+					}
 					// This already assumes that the bPos represents the center
 					double xDiff = balls.get(ballTouched).getX() - event.x;
 					double yDiff = balls.get(ballTouched).getY() - event.y;
@@ -118,13 +124,12 @@ public class GameScreen extends Screen {
 				}
 			}
 		}
-		updateBall();
+		updateBall(deltaTime);
 	}
 
-	private void updateBall(){
-		double collisions = 0;
+	private void updateBall(double deltaTime){
 		for(int i=0 ; i < balls.size() ; i++){
-			balls.get(i).update();
+			balls.get(i).update(deltaTime);
 			double xPos = balls.get(i).getX();
 			double yPos = balls.get(i).getY();
 			// We check for collisions
@@ -133,10 +138,7 @@ public class GameScreen extends Screen {
 				double yPos2 = balls.get(j).getY();
 				double dist = Math.sqrt((xPos2 - xPos)*(xPos2 - xPos) + (yPos2 - yPos)*(yPos2 - yPos)); 
 				if( dist < ballSize){
-					collisions += 1;
 					balls.get(i).collide(balls.get(j));
-					Log.w("Debuggin", "This round we have had " + collisions + "collisions");
-//					collided = true;
 				}
 			}
 			
@@ -169,15 +171,47 @@ public class GameScreen extends Screen {
 		}
 	}
 	
-	private int inBall(int x, int y){
-		// should change this to a for loop when multiple balls are implemented. 
+	private void addBall(){
+		if (inBall((int) gameWidth/2, (int) gameHeight/2, ballSize) == -1){
+			balls.add(new Ball((int) gameWidth/2, (int) gameHeight/2, 0, 0));
+			return;
+		}
+		for(int attempts = 0; attempts < 100 ; attempts++){
+			double testX = random.nextDouble() * gameWidth;
+			double testY = (0.5 + (random.nextDouble()*0.5) ) * gameHeight;
+			for (int i = 0; i < balls.size(); i++) {
+				if (inBall((int)testX, (int) testY, ballSize) == -1){
+					balls.add(new Ball(testX, testY, 0, 0));
+					return;
+				}
+			}
+//			balls.add(new Ball(gameWidth/2, gameHeight/2,0,0));
+		}
+	}
+
+	private void addTennisBall(){
+		for(int attempts = 0; attempts < 20 ; attempts++){
+			double testX = random.nextDouble() * gameWidth;
+			double testY = (0.5 + (random.nextDouble()*0.5) ) * gameHeight;
+			for (int i = 0; i < balls.size(); i++) {
+				if (inBall((int)testX, (int) testY, 10) == -1){
+					balls.add(new Ball(testX, testY, 0, 0));
+					return;
+				}
+			}
+		}
+	}	
+//			balls.add(new Ball(gameWidth/2, gameHeight/2,0,0));
+
+	
+	private int inBall(int x, int y, double radius){
 		// I should replace ball with "spheroid game object" for the sake of everyone involved.
 		double posX, posY;
+		// Check for all balls if this coordinate is .. within that.
 		for (int i = 0; i < balls.size(); i++) {
 			posX = balls.get(i).getX();
 			posY = balls.get(i).getY();
-			if (x > posX - ballSize/2 && x < posX + ballSize/2 
-					&& y > posY - ballSize/2 && y < posY + ballSize + ballSize/2)
+			if ( Math.sqrt( ((x-posX)*(x-posX)) +  ((y-posY)*(y-posY)) ) < ballSize - radius)
 				return i;
 		}
 		return -1;
@@ -189,7 +223,7 @@ public class GameScreen extends Screen {
 			if (event.type == TouchEvent.TOUCH_DOWN) {
 				nullify();
 				game.setScreen(new MainScreen(game));
-				return;
+				return;	
 			}
 		}
 	}
@@ -224,7 +258,6 @@ public class GameScreen extends Screen {
 		for (int i = 0; i < balls.size(); i++) {
 			g.drawImage(Assets.ball, (int) balls.get(i).getX(),(int) balls.get(i).getY());			
 		}
-
 	}
 
 	private void drawRunningUI() {

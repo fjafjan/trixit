@@ -19,7 +19,7 @@ public class Ball {
 		size = 100; // I don't really make sure that this matches the size of the image right?
 		bounceCoef = 0.7;
 		weight = 1./20.;
-		gravity = 0.5;
+		gravity = 0.2;
 	}
 	
 	public double getX(){
@@ -38,10 +38,10 @@ public class Ball {
 		yVel += (forceY/weight);
 	}
 	
-	public void update(){
-		xPos += xVel;
-		yPos += yVel;
-		yVel += gravity;
+	public void update(double deltaTime){
+		xPos += xVel * deltaTime;
+		yPos += yVel * deltaTime;
+		yVel += gravity * deltaTime;
 	}
 	
 	public void bounceX(double xPos){
@@ -51,7 +51,7 @@ public class Ball {
 	
 	public void bounceY(double yPos){
 		this.yPos = yPos;
-		yVel *= -bounceCoef;
+		yVel *= -bounceCoef*0.7;
 	}
 
 	public void collide(Ball otherBall){
@@ -68,16 +68,9 @@ public class Ball {
 		double dist = (xPosDiff * xPosDiff ) + (yPosDiff * yPosDiff); 
 		double massFactor = 1.;
 		// The size factor is weird but lets see how it works at least
-		Log.w("Debuggin", "Pre collisions we have vel " + xVel + " " + yVel);
-		// conservation of kinetic energy
-		double kinEPre = (xVel*xVel) + (yVel*yVel) + (otherBall.xVel*otherBall.xVel) + (otherBall.yVel*otherBall.yVel); 
 		xVel -= massFactor * innerTot * xPosDiff / dist;
 		yVel -= massFactor * innerTot * yPosDiff / dist;
 		otherBall.xVel = otherBall.xVel  + massFactor * innerTot * xPosDiff / dist;
 		otherBall.yVel = otherBall.yVel  + massFactor * innerTot * yPosDiff / dist;
-		double kinEPost = (xVel*xVel) + (yVel*yVel) + (otherBall.xVel*otherBall.xVel) + (otherBall.yVel*otherBall.yVel);
-		Log.w("Debuggin", "Ppost collisions we have vel " + xVel + " " + yVel);
-		Log.w("Debuggin", "Energy pre" + kinEPre + " and after " + kinEPost);
- 
 	}
 }
