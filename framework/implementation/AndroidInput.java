@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.ArrayList;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
@@ -84,9 +85,11 @@ public class AndroidInput implements Input, OnTouchListener {
                     break;
 
                 case MotionEvent.ACTION_UP:
+                	Log.w("Debuggin", "We detect up at the early stage");
                 	v.performClick();
                 	break;
                 case MotionEvent.ACTION_POINTER_UP:
+                	Log.w("Debuggin", "We detect up at the early stage");
                 	v.performClick();
                 	break;
                 case MotionEvent.ACTION_CANCEL:

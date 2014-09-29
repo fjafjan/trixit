@@ -4,6 +4,7 @@ package com.trixit.framework.implementation;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
@@ -12,6 +13,8 @@ import com.trixit.framework.Pool;
 import com.trixit.framework.Input.TouchEvent;
 import com.trixit.framework.Pool.PoolObjectFactory;
 
+
+////// THIS CLASS IS DEPRECIATED, KEPT ONLY FOR ARCHIVAL PURPOSES //////
 
 public class TouchHandler implements OnTouchListener  {
     private static final int MAX_TOUCHPOINTS = 10;
@@ -44,7 +47,7 @@ public class TouchHandler implements OnTouchListener  {
     public boolean onTouch(View v, MotionEvent event) {
         synchronized (this) {
             int action = event.getAction() & MotionEvent.ACTION_MASK;
-            int pointerIndex = (event.getAction() & MotionEvent.ACTION_POINTER_ID_MASK) >> MotionEvent.ACTION_POINTER_ID_SHIFT;
+            int pointerIndex = (event.getAction() & MotionEvent.ACTION_POINTER_INDEX_MASK) >> MotionEvent.ACTION_POINTER_INDEX_SHIFT;
             int pointerCount = event.getPointerCount();
             TouchEvent touchEvent;
             for (int i = 0; i < MAX_TOUCHPOINTS; i++) {
@@ -73,7 +76,27 @@ public class TouchHandler implements OnTouchListener  {
                     break;
 
                 case MotionEvent.ACTION_UP:
+                	Log.w("Debuggin", "We detect up at the early stage");
+                    touchEvent = touchEventPool.newObject();
+                    touchEvent.type = TouchEvent.TOUCH_UP;
+                    touchEvent.pointer = pointerId;
+                    touchEvent.x = touchX[i] = (int) (event.getX(i) * scaleX);
+                    touchEvent.y = touchY[i] = (int) (event.getY(i) * scaleY);
+                    isTouched[i] = false;
+                    id[i] = -1;
+                    touchEventsBuffer.add(touchEvent);
+                    break;
                 case MotionEvent.ACTION_POINTER_UP:
+                	Log.w("Debuggin", "We detect up at the early stage");
+                    touchEvent = touchEventPool.newObject();
+                    touchEvent.type = TouchEvent.TOUCH_UP;
+                    touchEvent.pointer = pointerId;
+                    touchEvent.x = touchX[i] = (int) (event.getX(i) * scaleX);
+                    touchEvent.y = touchY[i] = (int) (event.getY(i) * scaleY);
+                    isTouched[i] = false;
+                    id[i] = -1;
+                    touchEventsBuffer.add(touchEvent);
+                    break;
                 case MotionEvent.ACTION_CANCEL:
                     touchEvent = touchEventPool.newObject();
                     touchEvent.type = TouchEvent.TOUCH_UP;

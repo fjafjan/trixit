@@ -40,7 +40,7 @@ public class GameScreen extends Screen {
 	int ballSize;
 	List<Ball> balls;
 	TennisBall tennisball;
-	double minXPos, maxXPos, minYPos, maxYPos, chanceOfMod;
+	double minXPos, maxXPos, minYPos, maxYPos, chanceOfMod, tennisSpeed;
 	int gameHeight, gameWidth;
 	
 	
@@ -48,6 +48,7 @@ public class GameScreen extends Screen {
 	boolean collided = false;
 	public GameScreen(Game game){
 		super(game);
+		tennisSpeed = 20;
 		ballSize = 100;
 		livesleft = 10;
 		chanceOfMod = 0.1;
@@ -81,7 +82,7 @@ public class GameScreen extends Screen {
 
 		// I think there should only be two states, either running or game over. No 
 		// menues and shit, smooth user experience!
-		if( score > (20*balls.size()) ){
+		if( score > (2*balls.size()) ){
 			addBall();
 		}
 		if (state == GameState.Ready)
@@ -103,6 +104,9 @@ public class GameScreen extends Screen {
 
 	private void updateRunning(List<TouchEvent> touchEvents, double deltaTime) {
 		int len =  touchEvents.size();
+		
+		ArrayList<DragEvent> dragEvents = new ArrayList<DragEvent>();
+		// Change this to be a class member instead of function variable.  
 		for (int i = 0; i < len; i++) {
 			TouchEvent event = touchEvents.get(i);
 			if (event.type == TouchEvent.TOUCH_DOWN){
@@ -122,9 +126,38 @@ public class GameScreen extends Screen {
 					balls.get(ballTouched).updateForce(xForce, yForce); 
 					Log.w("Debuggin", "We touch the ball, the resulting force is " + xForce + " " + yForce);
 				}
+			}else if(event.type == TouchEvent.TOUCH_DRAGGED){
+				if(dragEvents.isEmpty()){
+					dragEvents.add(new DragEvent(event));
+				}else{
+					boolean assigned = false;
+					for (int j = 0; j < dragEvents.size(); j++) {
+						if(dragEvents.get(j).id == event.pointer){
+							dragEvents.get(j).addEvent(event);
+							assigned = true;
+						}
+					}
+					/// If there was no other drag event associated with
+					if(!assigned){
+						dragEvents.add(new DragEvent(event));
+					}
+				}
+					// Hopefully all the drag events from one finger appear at least in sequence. 
+					
+//					Log.w("Debuggin", "We have another touch event of type " + event.type);
+					//Log.w("Debuggin", "For reference UP = " + TouchEvent.TOUCH_UP  + " dragged = " + TouchEvent.TOUCH_DRAGGED);			
 			}
 		}
+		// We have checked all our touch events.
+		printDragEvents(dragEvents);
 		updateBall(deltaTime);
+	}
+
+	private void printDragEvents(ArrayList<DragEvent> dragEvents) {
+		for (int i = 0; i < dragEvents.size(); i++) {
+			Log.w("Debuggin", "Dragevent nr " + dragEvents.get(i).id);
+			dragEvents.get(i).printEvents();
+		}
 	}
 
 	private void updateBall(double deltaTime){
@@ -178,7 +211,7 @@ public class GameScreen extends Screen {
 		}
 		for(int attempts = 0; attempts < 100 ; attempts++){
 			double testX = random.nextDouble() * gameWidth;
-			double testY = (0.5 + (random.nextDouble()*0.5) ) * gameHeight;
+			double testY = ((random.nextDouble()*0.5) - 0.5 ) * gameHeight;
 			for (int i = 0; i < balls.size(); i++) {
 				if (inBall((int)testX, (int) testY, ballSize) == -1){
 					balls.add(new Ball(testX, testY, 0, 0));
@@ -192,10 +225,13 @@ public class GameScreen extends Screen {
 	private void addTennisBall(){
 		for(int attempts = 0; attempts < 20 ; attempts++){
 			double testX = random.nextDouble() * gameWidth;
-			double testY = (0.5 + (random.nextDouble()*0.5) ) * gameHeight;
+			double testY = ((random.nextDouble()*0.5) - 0.5 ) * gameHeight;
+			double initVX = random.nextDouble() * tennisSpeed;
+			double initVY = Math.abs( random.nextDouble() * tennisSpeed);
 			for (int i = 0; i < balls.size(); i++) {
 				if (inBall((int)testX, (int) testY, 10) == -1){
-					balls.add(new Ball(testX, testY, 0, 0));
+					// Add a reasonably high initial velocity
+					tennisball = new TennisBall(testX, testY, initVX, initVY);
 					return;
 				}
 			}
@@ -211,7 +247,7 @@ public class GameScreen extends Screen {
 		for (int i = 0; i < balls.size(); i++) {
 			posX = balls.get(i).getX();
 			posY = balls.get(i).getY();
-			if ( Math.sqrt( ((x-posX)*(x-posX)) +  ((y-posY)*(y-posY)) ) < ballSize - radius)
+			if ( Math.sqrt( ((x-posX)*(x-posX)) +  ((y-posY)*(y-posY)) ) < ballSize  + radius)
 				return i;
 		}
 		return -1;
