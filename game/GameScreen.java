@@ -117,8 +117,10 @@ public class GameScreen extends Screen {
 					if (random.nextDouble() < chanceOfMod){
 						addTennisBall();
 					}
-					// Rewrie this in some way to not be the longest line in the program by a mile. 
-					Vector2d force = new Vector2d(balls.get(ballTouched).getX() - event.x, balls.get(ballTouched).getY() - event.y);
+					// Rewrie this in some way to not be the longest line in the program by a mile.
+					Vector2d eventPos = new Vector2d(event.x, event.y);
+					
+					Vector2d force = new Vector2d(balls.get(ballTouched).getPos().diff(eventPos));
 					force.normalize();
 					// This already assumes that the bPos represents the center
 					// CHange this to a function.
@@ -128,8 +130,8 @@ public class GameScreen extends Screen {
 			//		double yForce = yDiff / Math.sqrt((xDiff*xDiff) + (yDiff*yDiff));
 					// Change the 0.01 constant to be weight, make sure that the directons
 					// are actually correct... just try it out. 
-					balls.get(ballTouched).updateForce(xForce, yForce); 
-					Log.w("Debuggin", "We touch the ball, the resulting force is " + xForce + " " + yForce);
+					balls.get(ballTouched).updateForce(force); 
+					Log.w("Debuggin", "We touch the ball, the resulting force is " + force.x + " " + force.y);
 				}
 			}else if(event.type == TouchEvent.TOUCH_DRAGGED){
 				if(dragEvents.isEmpty()){
@@ -215,38 +217,43 @@ public class GameScreen extends Screen {
 	private void updateBall(double deltaTime){
 		for(int i=0 ; i < balls.size() ; i++){
 			balls.get(i).update(deltaTime);
-			double xPos = balls.get(i).getX();
-			double yPos = balls.get(i).getY();
+			Vector2d pos = balls.get(i).getPos();
+//			double xPos = balls.get(i).getX();
+//			double yPos = balls.get(i).getY();
 			// We check for collisions
 			for(int j=i+1 ; j < balls.size() ; j++){
-				double xPos2 = balls.get(j).getX();
-				double yPos2 = balls.get(j).getY();
-				double dist = Math.sqrt((xPos2 - xPos)*(xPos2 - xPos) + (yPos2 - yPos)*(yPos2 - yPos)); 
+				Vector2d pos2 = balls.get(i).getPos();
+
+//				double xPos2 = balls.get(j).getX();
+//				double yPos2 = balls.get(j).getY();
+				double dist = pos2.diff(pos).length();
+//				double dist = Math.sqrt((xPos2 - xPos)*(xPos2 - xPos) + (yPos2 - yPos)*(yPos2 - yPos)); 
 				if( dist < ballSize){
 					balls.get(i).collide(balls.get(j));
 				}
 			}
+			/// We handle edge cases where the ball collides with a edge or wall below.
 			
-			if(xPos < ballSize/2){
-				double overstep = (ballSize/2 - xPos);
-				xPos = ballSize/2 + overstep ;
-				balls.get(i).bounceX(xPos);
-			}else if(xPos > gameWidth - (ballSize/2)){
+			/// If the ball edge goes outside the left wall
+			if(pos.x < ballSize/2){
+				double overstep = (ballSize/2 - pos.x);
+				balls.get(i).bounceX(ballSize/2 + overstep );
+			/// If the ball edge goes outside the right wall
+			}else if(pos.x > gameWidth - (ballSize/2)){
 				// overstep represent the amount the ball has went outside the 
 				// game area.
-				double overstep = (xPos - gameWidth + (ballSize/2));
-				xPos = gameWidth - (ballSize/2) - overstep;
-				balls.get(i).bounceX(xPos);
+				double overstep = (pos.x - gameWidth + (ballSize/2));
+				balls.get(i).bounceX(gameWidth - (ballSize/2) - overstep);
 			}
-	
-			if(yPos < ballSize/2){
-				double overstep = (ballSize/2 - yPos);
-				yPos = ballSize/2 + overstep;
-				balls.get(i).bounceY(yPos);			
-			}else if(yPos > gameHeight - (ballSize/2)){
-				double overstep = (yPos - gameHeight + (ballSize/2));
-				yPos = gameHeight- (ballSize/2) - overstep;
-				balls.get(i).bounceY(yPos);
+			
+			/// If the edge of the ball goes outside the top wall/roof
+			if(pos.y < ballSize/2){
+				double overstep = (ballSize/2 - pos.y);
+				balls.get(i).bounceY(ballSize/2 + overstep);
+			/// If the edge of the ball goes outside the floor
+			}else if(pos.y > gameHeight - (ballSize/2)){
+				double overstep = (pos.y - gameHeight + (ballSize/2));
+				balls.get(i).bounceY(gameHeight- (ballSize/2) - overstep);
 				livesleft -= 1;
 				if (livesleft == 0){
 					Log.w("Debuggin", "Game is over :(");
@@ -292,14 +299,13 @@ public class GameScreen extends Screen {
 //			balls.add(new Ball(gameWidth/2, gameHeight/2,0,0));
 
 	
-	private int inBall(int x, int y, double radius){
+	private int inBall(double x, double y, double radius){
 		// I should replace ball with "spheroid game object" for the sake of everyone involved.
-		double posX, posY;
 		// Check for all balls if this coordinate is .. within that.
+		Vector2d pos = new Vector2d(x, y);
 		for (int i = 0; i < balls.size(); i++) {
-			posX = balls.get(i).getX();
-			posY = balls.get(i).getY();
-			if ( Math.sqrt( ((x-posX)*(x-posX)) +  ((y-posY)*(y-posY)) ) < ballSize  + radius)
+			Vector2d ballPos =balls.get(i).getPos(); 
+			if ( pos.diff(ballPos).length()  < ballSize  + radius)
 				return i;
 		}
 		return -1;
