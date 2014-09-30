@@ -1,5 +1,7 @@
 package com.trixit.framework;
 
+import android.util.Log;
+
 public class Vector2d {
 	public double x, y;
 	
@@ -45,5 +47,14 @@ public class Vector2d {
 	public void divide(double d){
 		this.x /= d;
 		this.y /= d;
+	}
+	
+	public void print(){
+		Log.w("Debuggin", "x = " + this.x + ", y = " + this.y);
+	}
+
+	@Override
+	public String toString(){
+		return "x = " + this.x + ", y = " + this.y;
 	}
 }

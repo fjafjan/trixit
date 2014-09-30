@@ -117,12 +117,15 @@ public class GameScreen extends Screen {
 					if (random.nextDouble() < chanceOfMod){
 						addTennisBall();
 					}
+					// Rewrie this in some way to not be the longest line in the program by a mile. 
+					Vector2d force = new Vector2d(balls.get(ballTouched).getX() - event.x, balls.get(ballTouched).getY() - event.y);
+					force.normalize();
 					// This already assumes that the bPos represents the center
 					// CHange this to a function.
-					double xDiff = balls.get(ballTouched).getX() - event.x;
-					double yDiff = balls.get(ballTouched).getY() - event.y;
-					double xForce = xDiff / Math.sqrt((xDiff*xDiff) + (yDiff*yDiff));
-					double yForce = yDiff / Math.sqrt((xDiff*xDiff) + (yDiff*yDiff));
+//					double xDiff = balls.get(ballTouched).getX() - event.x;
+	//				double yDiff = balls.get(ballTouched).getY() - event.y;
+		//			double xForce = xDiff / Math.sqrt((xDiff*xDiff) + (yDiff*yDiff));
+			//		double yForce = yDiff / Math.sqrt((xDiff*xDiff) + (yDiff*yDiff));
 					// Change the 0.01 constant to be weight, make sure that the directons
 					// are actually correct... just try it out. 
 					balls.get(ballTouched).updateForce(xForce, yForce); 
@@ -175,11 +178,16 @@ public class GameScreen extends Screen {
 					Vector2d touchPos = new Vector2d(events.get(j).x,events.get(j).y);
 					// The starting point of this drag/swipe
 					Vector2d initalPos = new Vector2d(events.get(0).x,events.get(0).y);
-
+					Vector2d endPos = new Vector2d(events.get(events.size()-1).x,events.get(events.size()-1).y);
 					// The direction of the swipe is assumed to be straight and linear.
-					Vector2d dragVel = touchPos.diff(initalPos);
+					Vector2d dragVel = endPos.diff(initalPos);
+					Log.w("Debuggin", "The lenght of this dragEvent is " + events.size());
+					Log.w("Debuggin", "The dragVel pre is " + dragVel);
+					Log.w("Debuggin", "deltaT is " + deltaTime);
+					Log.w("Debuggin", "compare this dragVel to ballVec which is  " + balls.get(ballTouched).getVel());
 					dragVel.divide(deltaTime);
 					
+					Log.w("Debuggin", "The dragVel is " + dragVel);
 					// The vector from the ball and the touchPoint
 					Vector2d touchDir = touchPos.diff( balls.get(ballTouched).getPos() );
 					touchDir.normalize();

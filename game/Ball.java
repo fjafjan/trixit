@@ -22,7 +22,7 @@ public class Ball {
 		size = 100; // I don't really make sure that this matches the size of the image right?
 		bounceCoef = 0.7;
 		weight = 1./20.;
-		gravity = 0.2;
+		gravity = 0;
 	}
 	
 	public Ball(Vector2d pos, Vector2d vel){
@@ -40,6 +40,13 @@ public class Ball {
 	// Only updates the speeds based on the weight and the forces given
 	
 	/// TODO add the delta t here now we assume that the quadratic term is sufficiently small to ignore.
+	public void updateForce(Vector2d force){
+		xVel += force.x/weight;
+		yVel += force.y/weight;
+	}
+
+	
+	
 	public void updateForce(double forceX, double forceY){
 		xVel += forceX/weight;
 		yVel += (forceY/weight);
