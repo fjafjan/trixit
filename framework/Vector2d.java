@@ -17,6 +17,17 @@ public class Vector2d {
 		this.x = otherVec.x;
 		this.y = otherVec.y;
 	}
+
+	public void plus(Vector2d otherVec){
+		this.x += otherVec.x;
+		this.y += otherVec.y;
+	}
+
+	public void plus(double d){
+		this.x += d;
+		this.y += d;
+	}
+	
 	
 	// Subtracts otherVec from this vector. 
 	public void minus(Vector2d otherVec){
@@ -24,10 +35,7 @@ public class Vector2d {
 		this.y -= otherVec.y;
 	}
 	
-	public void plus(Vector2d otherVec){
-		this.x += otherVec.x;
-		this.y += otherVec.y;
-	}
+	
 	public void mult(double d){
 		this.x *= d;
 		this.y *= d;
@@ -63,9 +71,10 @@ public class Vector2d {
 	}
 	
 	public void normalize(){
-		double d = (x*x) + (y*y);
-		this.x = x/d;
-		this.y = y/d;
+		double d = this.length();
+		this.x /= d;
+		this.y /= d;
+		Log.w("Debuggin", "To check that normalization worked we check length = " + this.length());
 	}
 	
 	public Vector2d dot(Vector2d otherVec){

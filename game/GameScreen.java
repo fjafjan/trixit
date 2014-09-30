@@ -118,18 +118,12 @@ public class GameScreen extends Screen {
 						addTennisBall();
 					}
 					// Rewrie this in some way to not be the longest line in the program by a mile.
+					Log.w("Debuggin", "We try to push the ball in some direction ");
 					Vector2d eventPos = new Vector2d(event.x, event.y);
-					
-					Vector2d force = new Vector2d(balls.get(ballTouched).getPos().diff(eventPos));
+					Vector2d ballPos = balls.get(ballTouched).getPos();
+					Vector2d force = ballPos.diff(eventPos);
+
 					force.normalize();
-					// This already assumes that the bPos represents the center
-					// CHange this to a function.
-//					double xDiff = balls.get(ballTouched).getX() - event.x;
-	//				double yDiff = balls.get(ballTouched).getY() - event.y;
-		//			double xForce = xDiff / Math.sqrt((xDiff*xDiff) + (yDiff*yDiff));
-			//		double yForce = yDiff / Math.sqrt((xDiff*xDiff) + (yDiff*yDiff));
-					// Change the 0.01 constant to be weight, make sure that the directons
-					// are actually correct... just try it out. 
 					balls.get(ballTouched).updateForce(force); 
 					Log.w("Debuggin", "We touch the ball, the resulting force is " + force.x + " " + force.y);
 				}
@@ -156,12 +150,12 @@ public class GameScreen extends Screen {
 			}
 		}
 		// We have checked all our touch events.
-		collidgeDragEvents(dragEvents, deltaTime);
-		printDragEvents(dragEvents);
+		collideDragEvents(dragEvents, deltaTime);
+//		printDragEvents(dragEvents);
 		updateBall(deltaTime);
 	}
 
-	private void collidgeDragEvents(ArrayList<DragEvent> dragEvents, double deltaTime) {
+	private void collideDragEvents(ArrayList<DragEvent> dragEvents, double deltaTime) {
 		// If we have multiple dragEvents we check each
 		for (int i = 0; i < dragEvents.size(); i++) {
 			// For each such dragEvent we look at each "click"
@@ -183,13 +177,13 @@ public class GameScreen extends Screen {
 					Vector2d endPos = new Vector2d(events.get(events.size()-1).x,events.get(events.size()-1).y);
 					// The direction of the swipe is assumed to be straight and linear.
 					Vector2d dragVel = endPos.diff(initalPos);
-					Log.w("Debuggin", "The lenght of this dragEvent is " + events.size());
-					Log.w("Debuggin", "The dragVel pre is " + dragVel);
-					Log.w("Debuggin", "deltaT is " + deltaTime);
-					Log.w("Debuggin", "compare this dragVel to ballVec which is  " + balls.get(ballTouched).getVel());
+//					Log.w("Debuggin", "The lenght of this dragEvent is " + events.size());
+//					Log.w("Debuggin", "The dragVel pre is " + dragVel);
+//					Log.w("Debuggin", "deltaT is " + deltaTime);
+//					Log.w("Debuggin", "compare this dragVel to ballVec which is  " + balls.get(ballTouched).getVel());
 					dragVel.divide(deltaTime);
 					
-					Log.w("Debuggin", "The dragVel is " + dragVel);
+//					Log.w("Debuggin", "The dragVel is " + dragVel);
 					// The vector from the ball and the touchPoint
 					Vector2d touchDir = touchPos.diff( balls.get(ballTouched).getPos() );
 					touchDir.normalize();
@@ -222,11 +216,13 @@ public class GameScreen extends Screen {
 //			double yPos = balls.get(i).getY();
 			// We check for collisions
 			for(int j=i+1 ; j < balls.size() ; j++){
-				Vector2d pos2 = balls.get(i).getPos();
+				Vector2d pos2 = balls.get(j).getPos();
 
 //				double xPos2 = balls.get(j).getX();
 //				double yPos2 = balls.get(j).getY();
-				double dist = pos2.diff(pos).length();
+				double dist = (pos2.diff(pos)).length();
+				double olddist = Math.sqrt(((pos2.x - pos.x)*(pos2.x - pos.x)) + ((pos2.y - pos.y)*(pos2.y - pos2.y)));
+				Log.w("Debuggin", "new ist is  " + dist + " and old dist is " + olddist);
 //				double dist = Math.sqrt((xPos2 - xPos)*(xPos2 - xPos) + (yPos2 - yPos)*(yPos2 - yPos)); 
 				if( dist < ballSize){
 					balls.get(i).collide(balls.get(j));
@@ -304,9 +300,11 @@ public class GameScreen extends Screen {
 		// Check for all balls if this coordinate is .. within that.
 		Vector2d pos = new Vector2d(x, y);
 		for (int i = 0; i < balls.size(); i++) {
-			Vector2d ballPos =balls.get(i).getPos(); 
-			if ( pos.diff(ballPos).length()  < ballSize  + radius)
+			Vector2d ballPos = balls.get(i).getPos(); 
+			if ( pos.diff(ballPos).length()  < (ballSize  + radius)){
+				Log.w("Debuggin", "We detect something colliding with the ball");
 				return i;
+			}
 		}
 		return -1;
 	}
