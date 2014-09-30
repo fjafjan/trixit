@@ -1,5 +1,6 @@
 package com.trixit.game;
 
+import com.trixit.framework.Vector2d;
 import com.trixit.game.GameScreen.GameState;
 
 import android.util.Log;
@@ -8,7 +9,7 @@ import android.util.Log;
 
 public class Ball {
 	private double xPos, yPos, xVel, yVel;
-	
+	private Vector2d pos, vel;
 	
 	public double size, bounceCoef, weight, gravity;
 	public Ball(double xPos,double yPos, double xVel, double yVel){
@@ -16,6 +17,8 @@ public class Ball {
 		this.yPos = yPos;
 		this.xVel = xVel;
 		this.yVel = yVel;
+		this.pos = new Vector2d(xPos, yPos);
+		this.vel = new Vector2d(xVel, yVel);
 		size = 100; // I don't really make sure that this matches the size of the image right?
 		bounceCoef = 0.7;
 		weight = 1./20.;
@@ -52,6 +55,14 @@ public class Ball {
 	public void bounceY(double yPos){
 		this.yPos = yPos;
 		yVel *= -bounceCoef*0.7;
+	}
+	
+	public Vector2d getPos(){
+		return pos;
+	}
+
+	public Vector2d getVel(){
+		return vel;
 	}
 
 	public void collide(Ball otherBall){

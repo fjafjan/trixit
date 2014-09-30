@@ -19,6 +19,7 @@ import com.trixit.framework.Screen;
 import com.trixit.framework.Game;
 import com.trixit.framework.Graphics;
 import com.trixit.framework.Input.TouchEvent;
+import com.trixit.framework.Vector2d;
 import com.trixit.game.Ball;
 import com.trixit.game.TennisBall;
 //import java.util.
@@ -117,6 +118,7 @@ public class GameScreen extends Screen {
 						addTennisBall();
 					}
 					// This already assumes that the bPos represents the center
+					// CHange this to a function.
 					double xDiff = balls.get(ballTouched).getX() - event.x;
 					double yDiff = balls.get(ballTouched).getY() - event.y;
 					double xForce = xDiff / Math.sqrt((xDiff*xDiff) + (yDiff*yDiff));
@@ -149,8 +151,53 @@ public class GameScreen extends Screen {
 			}
 		}
 		// We have checked all our touch events.
+		collidgeDragEvents(dragEvents, deltaTime);
 		printDragEvents(dragEvents);
 		updateBall(deltaTime);
+	}
+
+	private void collidgeDragEvents(ArrayList<DragEvent> dragEvents, double deltaTime) {
+		// If we have multiple dragEvents we check each
+		for (int i = 0; i < dragEvents.size(); i++) {
+			// For each such dragEvent we look at each "click"
+			DragEvent thisEvent = dragEvents.get(i);
+			ArrayList<TouchEvent> events = thisEvent.getEvents();
+			for (int j = 0; j < events.size(); j++) {
+				int ballTouched = inBall(events.get(j).x, events.get(j).y, 0);
+				if (ballTouched != -1){
+					if(thisEvent.collidedWith.contains(ballTouched)){
+						continue;
+					}
+					thisEvent.collided(ballTouched);
+					// Make sure that this ball has not collided with this swipe before. 
+					
+					// The position of impact
+					Vector2d touchPos = new Vector2d(events.get(j).x,events.get(j).y);
+					double posX = events.get(j).x;
+					double posY = events.get(j).y;
+
+					Vector2d initalPos = new Vector2d(events.get(0).x,events.get(0).y);
+
+					// The direction of the swipe is assumed to be linear.
+					Vector2d touchVel = touchPos.diff(initalPos);
+					touchVel.divide(deltaTime);
+					
+//					double velX = (posX - events.get(0).x)/deltaTime;
+//					double velY = (posY - events.get(0).y)/deltaTime;
+
+					// The line between the ball and the touchPoint
+					Vector2d touchDir = touchPos.diff(balls.get(ballTouched).getX)
+					double deltaX = posX - balls.get(ballTouched).getX();
+					double deltaY = posY - balls.get(ballTouched).getY();
+					Ball virtualBall = new Ball(posX, posY, velX, velY);
+					balls.get(ballTouched).collide(virtualBall);
+					// Remove the virtual ball.
+					virtualBall = null;
+				}
+			}
+			
+			
+		}
 	}
 
 	private void printDragEvents(ArrayList<DragEvent> dragEvents) {
