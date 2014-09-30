@@ -22,15 +22,24 @@ public class Vector2d {
 	public double length(){
 		return (x*x) + (y*y);
 	}
+
+	public Vector2d add(Vector2d otherVec){
+		return new Vector2d(this.x + otherVec.x, this.y + otherVec.y);
+	}
 	
 	public Vector2d diff(Vector2d otherVec){
 		return new Vector2d(this.x - otherVec.x, this.y - otherVec.y);
 	}
 	
-	public void normalize(Vector2d otherVec){
+	public void normalize(){
 		double d = (x*x) + (y*y);
 		this.x = x/d;
 		this.y = y/d;
+	}
+	
+	public void mult(double d){
+		this.x *= d;
+		this.y *= d;
 	}
 	
 	public void divide(double d){

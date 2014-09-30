@@ -173,23 +173,20 @@ public class GameScreen extends Screen {
 					
 					// The position of impact
 					Vector2d touchPos = new Vector2d(events.get(j).x,events.get(j).y);
-					double posX = events.get(j).x;
-					double posY = events.get(j).y;
-
+					// The starting point of this drag/swipe
 					Vector2d initalPos = new Vector2d(events.get(0).x,events.get(0).y);
 
-					// The direction of the swipe is assumed to be linear.
-					Vector2d touchVel = touchPos.diff(initalPos);
-					touchVel.divide(deltaTime);
+					// The direction of the swipe is assumed to be straight and linear.
+					Vector2d dragVel = touchPos.diff(initalPos);
+					dragVel.divide(deltaTime);
 					
-//					double velX = (posX - events.get(0).x)/deltaTime;
-//					double velY = (posY - events.get(0).y)/deltaTime;
-
-					// The line between the ball and the touchPoint
-					Vector2d touchDir = touchPos.diff(balls.get(ballTouched).getX)
-					double deltaX = posX - balls.get(ballTouched).getX();
-					double deltaY = posY - balls.get(ballTouched).getY();
-					Ball virtualBall = new Ball(posX, posY, velX, velY);
+					// The vector from the ball and the touchPoint
+					Vector2d touchDir = touchPos.diff( balls.get(ballTouched).getPos() );
+					touchDir.normalize();
+					touchDir.mult(ballSize * 2);
+					Vector2d vBallPos = balls.get(ballTouched).getPos().add(touchDir);
+					Ball virtualBall = new Ball(vBallPos, dragVel);
+					
 					balls.get(ballTouched).collide(virtualBall);
 					// Remove the virtual ball.
 					virtualBall = null;

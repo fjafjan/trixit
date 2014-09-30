@@ -25,6 +25,10 @@ public class Ball {
 		gravity = 0.2;
 	}
 	
+	public Ball(Vector2d pos, Vector2d vel){
+		this(pos.x, pos.y, vel.x, vel.y);
+	}
+	
 	public double getX(){
 		return xPos;
 	}
@@ -58,10 +62,12 @@ public class Ball {
 	}
 	
 	public Vector2d getPos(){
+		pos = new Vector2d(this.xPos, this.yPos);
 		return pos;
 	}
 
 	public Vector2d getVel(){
+		vel = new Vector2d(this.xVel, this.yVel);
 		return vel;
 	}
 
