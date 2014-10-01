@@ -74,7 +74,6 @@ public class Vector2d {
 		double d = this.length();
 		this.x /= d;
 		this.y /= d;
-		Log.w("Debuggin", "To check that normalization worked we check length = " + this.length());
 	}
 	
 	public Vector2d dot(Vector2d otherVec){

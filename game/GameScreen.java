@@ -163,37 +163,13 @@ public class GameScreen extends Screen {
 			ArrayList<TouchEvent> events = thisEvent.getEvents();
 			for (int j = 0; j < events.size(); j++) {
 				int ballTouched = inBall(events.get(j).x, events.get(j).y, 0);
+				//thisEvent.collided(ballTouched);
 				if (ballTouched != -1){
-					if(thisEvent.collidedWith.contains(ballTouched)){
-						continue;
-					}
-					thisEvent.collided(ballTouched);
-					// Make sure that this ball has not collided with this swipe before. 
+					// Make sure that this ball has not collided with this swipe before.
 					
-					// The position of impact
-					Vector2d touchPos = new Vector2d(events.get(j).x,events.get(j).y);
-					// The starting point of this drag/swipe
-					Vector2d initalPos = new Vector2d(events.get(0).x,events.get(0).y);
-					Vector2d endPos = new Vector2d(events.get(events.size()-1).x,events.get(events.size()-1).y);
-					// The direction of the swipe is assumed to be straight and linear.
-					Vector2d dragVel = endPos.diff(initalPos);
-//					Log.w("Debuggin", "The lenght of this dragEvent is " + events.size());
-//					Log.w("Debuggin", "The dragVel pre is " + dragVel);
-//					Log.w("Debuggin", "deltaT is " + deltaTime);
-//					Log.w("Debuggin", "compare this dragVel to ballVec which is  " + balls.get(ballTouched).getVel());
-					dragVel.divide(deltaTime);
-					
-//					Log.w("Debuggin", "The dragVel is " + dragVel);
-					// The vector from the ball and the touchPoint
-					Vector2d touchDir = touchPos.diff( balls.get(ballTouched).getPos() );
-					touchDir.normalize();
-					touchDir.mult(ballSize * 2);
-					Vector2d vBallPos = balls.get(ballTouched).getPos().add(touchDir);
-					Ball virtualBall = new Ball(vBallPos, dragVel);
-					
-					balls.get(ballTouched).collide(virtualBall);
-					// Remove the virtual ball.
-					virtualBall = null;
+					// Tries to swipe the ball, will return false if too recent.
+					if (balls.get(ballTouched).drag(events, j, deltaTime))
+						score += 1;
 				}
 			}
 			
@@ -221,8 +197,11 @@ public class GameScreen extends Screen {
 //				double xPos2 = balls.get(j).getX();
 //				double yPos2 = balls.get(j).getY();
 				double dist = (pos2.diff(pos)).length();
+				Vector2d oldDiff = new Vector2d(pos2.x - pos.x, pos2.y - pos.y);
+				Vector2d newDiff =  (pos2.diff(pos));
 				double olddist = Math.sqrt(((pos2.x - pos.x)*(pos2.x - pos.x)) + ((pos2.y - pos.y)*(pos2.y - pos2.y)));
-				Log.w("Debuggin", "new ist is  " + dist + " and old dist is " + olddist);
+//				Log.w("Debuggin", "new dist is  " + dist + " and old dist is " + olddist);
+//				Log.w("Debuggin", "new diff is  " + newDiff + " and old dist is " + oldDiff);
 //				double dist = Math.sqrt((xPos2 - xPos)*(xPos2 - xPos) + (yPos2 - yPos)*(yPos2 - yPos)); 
 				if( dist < ballSize){
 					balls.get(i).collide(balls.get(j));
@@ -302,7 +281,6 @@ public class GameScreen extends Screen {
 		for (int i = 0; i < balls.size(); i++) {
 			Vector2d ballPos = balls.get(i).getPos(); 
 			if ( pos.diff(ballPos).length()  < (ballSize  + radius)){
-				Log.w("Debuggin", "We detect something colliding with the ball");
 				return i;
 			}
 		}
