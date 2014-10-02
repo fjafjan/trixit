@@ -82,9 +82,46 @@ public class Ball {
 		// v' = v + atm constant mass factor * v1 - v2 dot x1 - x2 / r^2 * x1 - x2
 		// http://en.wikipedia.org/wiki/Elastic_collision#Two-Dimensional_Collision_With_Two_Moving_Objects
 		// posDiff = x1 - x2
+		
+		// Okay so we want to find out the time it took since they actually intersected one another.
+		
+		
 		Vector2d posDiff = this.pos.diff(otherBall.getPos());
 		// velDiff = x1 - x2
 		Vector2d velDiff = this.vel.diff(otherBall.getVel());
+		Vector2d velDiff2 = velDiff.multret(-1);
+
+		// We just want D to be one diameter. 
+		// V - v
+		/// t = (-sqrt(-+2 k x+2 l y)/
+		
+		// (-2 k x-2 l y)^2
+		double term1 = 2 * posDiff.multPoint(velDiff2).sum();
+
+		//  4 (k^2+l^2) (-D^2+x^2+y^2))
+		double term2 = 4 * velDiff2.abs() * (posDiff.abs() - (size*size));
+		
+		// +2 k x+2 l y)
+		double term3 = 2 * posDiff.multPoint(velDiff2).sum();
+		
+		// (2 (k^2+l^2))
+		double frac = 2 * velDiff2.abs();
+		
+		double t  = Math.sqrt((term1*term1) - term2) + term3;
+		t = t / frac;
+		
+		// 
+		if((posDiff.abs() - (size*size))  > 0)
+			Log.w("Debuggin", "!!!!!!!!!!!!!!!!!SOmething is messed up :/ !!!!!!!!!!!!!!!!!!!!!!!");
+		
+		double testDist1 = posDiff.add(velDiff.multret(t)).length();
+
+		// Okay so we have correctly found t. now we want to first virtually move the balls back to where
+		// they should have collided. 
+
+		/// This is simply pos.add(-vel * t)
+		/// otherball.setPos(otherBall.getPos(Othvel)) bla bla.
+		// 
 		
 		// innerProd =  < x1 - x2, v1 - v2 > 
 		// massFactor = 2 * m2 / (m1 + m2)

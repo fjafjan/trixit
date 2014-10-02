@@ -45,6 +45,9 @@ public class Vector2d {
 		return new Vector2d(x * d, y * d);
 	}
 	
+	public Vector2d multPoint(Vector2d otherVec){
+		return new Vector2d(x * otherVec.x, y * otherVec.y);
+	}
 	
 	public void divide(double d){
 		this.x /= d;
@@ -55,8 +58,14 @@ public class Vector2d {
 		return new Vector2d(this.x + otherVec.x, this.y + otherVec.y);
 	}
 
+	// Returns the euclidian length of the vector
 	public double length(){
 		return Math.sqrt((x*x) + (y*y));
+	}
+
+	// Returns the squared length. 
+	public double abs(){
+		return (x*x) + (y*y);
 	}
 
 	/// Does the same thing as diff, but I think it is often a more descriptive name, as it's the vector from
@@ -82,6 +91,11 @@ public class Vector2d {
 
 	public double innerProd(Vector2d otherVec){
 		return (this.x * otherVec.x) +  (this.y * otherVec.y);
+	}
+	
+	// Simply returns the sum of x and y.
+	public double sum(){
+		return this.x + this.y;
 	}
 	
 	public void print(){

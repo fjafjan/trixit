@@ -197,9 +197,9 @@ public class GameScreen extends Screen {
 //				double xPos2 = balls.get(j).getX();
 //				double yPos2 = balls.get(j).getY();
 				double dist = (pos2.diff(pos)).length();
-				Vector2d oldDiff = new Vector2d(pos2.x - pos.x, pos2.y - pos.y);
-				Vector2d newDiff =  (pos2.diff(pos));
-				double olddist = Math.sqrt(((pos2.x - pos.x)*(pos2.x - pos.x)) + ((pos2.y - pos.y)*(pos2.y - pos2.y)));
+//				Vector2d oldDiff = new Vector2d(pos2.x - pos.x, pos2.y - pos.y);
+//				Vector2d newDiff =  (pos2.diff(pos));
+//				double olddist = Math.sqrt(((pos2.x - pos.x)*(pos2.x - pos.x)) + ((pos2.y - pos.y)*(pos2.y - pos2.y)));
 //				Log.w("Debuggin", "new dist is  " + dist + " and old dist is " + olddist);
 //				Log.w("Debuggin", "new diff is  " + newDiff + " and old dist is " + oldDiff);
 //				double dist = Math.sqrt((xPos2 - xPos)*(xPos2 - xPos) + (yPos2 - yPos)*(yPos2 - yPos)); 
