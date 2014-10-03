@@ -163,7 +163,6 @@ public class GameScreen extends Screen {
 			ArrayList<TouchEvent> events = thisEvent.getEvents();
 			for (int j = 0; j < events.size(); j++) {
 				int ballTouched = inBall(events.get(j).x, events.get(j).y, 0);
-				//thisEvent.collided(ballTouched);
 				if (ballTouched != -1){
 					// Make sure that this ball has not collided with this swipe before.
 					

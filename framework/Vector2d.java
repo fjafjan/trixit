@@ -85,14 +85,31 @@ public class Vector2d {
 		this.y /= d;
 	}
 	
-	public Vector2d dot(Vector2d otherVec){
+	public Vector2d norm(){
+		double d = this.length();
+		return new Vector2d(this.x/d, this.y/d);
+	}
+	
+	// return scalar dot product
+	public double dot(Vector2d otherVec){
+		return (this.x * otherVec.x) +  (this.y * otherVec.y);
+	}
+	
+	// returns the vector dot product.
+	public Vector2d prod(Vector2d otherVec){
 		return new Vector2d(this.x * otherVec.x, this.y * otherVec.y);
 	}
 
+	
 	public double innerProd(Vector2d otherVec){
 		return (this.x * otherVec.x) +  (this.y * otherVec.y);
 	}
 	
+	// Project this vector on the other vector.
+	public Vector2d proj(Vector2d otherVec){
+		double dotProd = this.dot(otherVec.norm());
+		return otherVec.norm().multret(dotProd);
+	}
 	// Simply returns the sum of x and y.
 	public double sum(){
 		return this.x + this.y;

@@ -11,11 +11,9 @@ public class DragEvent {
 	
 	ArrayList<TouchEvent> touchEvents;
 	int id;
-	ArrayList<Integer> collidedWith;
 	
 	public DragEvent(TouchEvent e){
 		this.id = e.pointer;
-		this.collidedWith = new ArrayList<Integer>();
 		touchEvents = new ArrayList<TouchEvent>();
 		touchEvents.add(e);
 	}
@@ -34,11 +32,4 @@ public class DragEvent {
 		return touchEvents;
 	}
 	
-	public void collided(int ballIndex){
-		collidedWith.add(ballIndex);
-	}
-	
-	public void clearCollisions(){
-		collidedWith.clear();
-	}
 }

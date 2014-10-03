@@ -73,7 +73,12 @@ public class Ball {
 	public Vector2d getVel(){
 	    
 		return new Vector2d(vel);
-	}	
+	}
+	
+	public void setPos(Vector2d otherVec){
+		this.pos = new Vector2d(otherVec);
+	}
+
 
 	/// Collides this ball with another ball and performs the required velocity changes on both balls.
 	/// TODO implement predictive collisions to avoid balls getting stuck in one another, 
@@ -87,6 +92,7 @@ public class Ball {
 		
 		
 		Vector2d posDiff = this.pos.diff(otherBall.getPos());
+		Vector2d posDiff2 = posDiff.multret(-1);
 		// velDiff = x1 - x2
 		Vector2d velDiff = this.vel.diff(otherBall.getVel());
 		Vector2d velDiff2 = velDiff.multret(-1);
@@ -96,32 +102,42 @@ public class Ball {
 		/// t = (-sqrt(-+2 k x+2 l y)/
 		
 		// (-2 k x-2 l y)^2
-		double term1 = 2 * posDiff.multPoint(velDiff2).sum();
+		double[] ts = findCollisionTime(posDiff, velDiff);
+		double t1 = ts[0];
+		double t2 = ts[1];
 
-		//  4 (k^2+l^2) (-D^2+x^2+y^2))
-		double term2 = 4 * velDiff2.abs() * (posDiff.abs() - (size*size));
-		
-		// +2 k x+2 l y)
-		double term3 = 2 * posDiff.multPoint(velDiff2).sum();
-		
-		// (2 (k^2+l^2))
-		double frac = 2 * velDiff2.abs();
-		
-		double t  = Math.sqrt((term1*term1) - term2) + term3;
-		t = t / frac;
-		
-		// 
+
+ 
 		if((posDiff.abs() - (size*size))  > 0)
 			Log.w("Debuggin", "!!!!!!!!!!!!!!!!!SOmething is messed up :/ !!!!!!!!!!!!!!!!!!!!!!!");
-		
-		double testDist1 = posDiff.add(velDiff.multret(t)).length();
 
 		// Okay so we have correctly found t. now we want to first virtually move the balls back to where
 		// they should have collided. 
+		
+		double postDist = posDiff.add(velDiff.multret(t1)).length();
+		
+		/// Now we want to make sure that it is a "correct" colission where the current velocities are 
+		/// bringing the balls together. 
+		
+		
+		Log.w("Debuggin", "The times that work are " + t1 + " and " + t2);
+		pos.add(vel.multret(t1));
+		otherBall.setPos(otherBall.getPos().add(otherBall.getVel().multret(t1)));
+		posDiff = this.pos.diff(otherBall.getPos());
+			
 
-		/// This is simply pos.add(-vel * t)
-		/// otherball.setPos(otherBall.getPos(Othvel)) bla bla.
-		// 
+		/// There is a better way of checking this using normalized vectors I am sure.
+		
+		// I think we simply check if the projection of the velDiff on the posVEl vector  
+		/// If the distance between the balls is larger after a short time span, then 
+		if(areSameDirection(posDiff, velDiff)) {
+			Log.w("Debuggin", "We think this is not a good colission to do ");
+			return; // We don't perform a colission since they will separate naturally.
+		}
+			 
+
+		// Make sure that it has indeed worked.
+//		double testDist = this.pos.diff(otherBall.getPos()).length();
 		
 		// innerProd =  < x1 - x2, v1 - v2 > 
 		// massFactor = 2 * m2 / (m1 + m2)
@@ -138,7 +154,40 @@ public class Ball {
 		Vector2d newForce = posDiff.multret(massFactor * innerProd / dist); 
 		
 		vel.minus(newForce);
-		otherBall.updateForce(newForce.multret(weight));		
+		otherBall.updateForce(newForce.multret(weight));
+	}
+	
+	
+	private boolean areSameDirection(Vector2d vec1, Vector2d vec2){
+		return (vec1.dot(vec2) >= 0);
+	}
+	
+	private double[] findCollisionTime(Vector2d posDiff, Vector2d velDiff) {
+		double term1 = 2 * posDiff.multPoint(velDiff).sum();
+
+		//  4 (k^2+l^2) (-D^2+x^2+y^2))
+		double term2 = 4 * velDiff.abs() * (posDiff.abs() - (size*size));
+		
+		// +2 k x+2 l y)
+		double term3 = 2 * (posDiff.multPoint(velDiff)).sum();
+		
+		// (2 (k^2+l^2))
+		double frac = 2 * velDiff.abs();
+		
+		double t1  = Math.sqrt((term1*term1) - term2) + term3;
+		double t2  = Math.sqrt((term1*term1) - term2) - term3;
+		t1 = -t1 / frac;
+		t2 = t2 / frac;
+		double[] ans = {t1, t2};
+		return ans;
+	}
+
+	public double testTimeUpdate(double time, Ball otherBall){
+		Vector2d backupPos = new Vector2d(pos);
+		Vector2d otherPos = otherBall.getPos();
+		backupPos = backupPos.add(vel.multret(time));
+		otherPos = otherPos.add(otherBall.getVel().multret(time));
+		return backupPos.diff(otherPos).length();
 	}
 	
 	/// Collides the ball with a swipe from user represented in a list of TouchEvents and an index
