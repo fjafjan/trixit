@@ -21,13 +21,9 @@ public class MainScreen extends Screen {
 		List<TouchEvent> touchEvents = game.getInput().getTouchEvents();
 		
 		int len = touchEvents.size();
-	//	Log.w("Debuggin", "We touched " + len + " times");
 		for(int i = 0 ; i < len ; i++){
 			try{
 				TouchEvent event = touchEvents.get(i);
-		//		Log.w("Debuggin", "We get touched at " + event.x + " " + event.y);
-
-				// For some reason I am unable to detect TOUCH_UP events. 
 				if (event.type == TouchEvent.TOUCH_DOWN){
 					if (inBounds(event, 0, 0, g.getWidth(), g.getHeight())){ 
 						// Start game
@@ -77,3 +73,4 @@ public class MainScreen extends Screen {
 	}
 
 }
+	

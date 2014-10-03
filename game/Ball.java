@@ -20,7 +20,7 @@ public class Ball {
 		size = 100; // I don't really make sure that this matches the size of the image right?
 		bounceCoef = 0.7;
 		weight = 1./20.;
-		gravity = 0;
+		gravity = 1; 
 		unTouchedTime = 1000;
 	}
 	
@@ -92,52 +92,48 @@ public class Ball {
 		
 		
 		Vector2d posDiff = this.pos.diff(otherBall.getPos());
-		Vector2d posDiff2 = posDiff.multret(-1);
-		// velDiff = x1 - x2
 		Vector2d velDiff = this.vel.diff(otherBall.getVel());
-		Vector2d velDiff2 = velDiff.multret(-1);
 
-		// We just want D to be one diameter. 
-		// V - v
-		/// t = (-sqrt(-+2 k x+2 l y)/
-		
-		// (-2 k x-2 l y)^2
+		// Finds the two times when the balls will be 
 		double[] ts = findCollisionTime(posDiff, velDiff);
 		double t1 = ts[0];
 		double t2 = ts[1];
-
-
+		
+		Log.w("Debuggin", "t1 is " + t1 + " t2 is " + t2);
  
 		if((posDiff.abs() - (size*size))  > 0)
 			Log.w("Debuggin", "!!!!!!!!!!!!!!!!!SOmething is messed up :/ !!!!!!!!!!!!!!!!!!!!!!!");
 
 		// Okay so we have correctly found t. now we want to first virtually move the balls back to where
-		// they should have collided. 
-		
-		double postDist = posDiff.add(velDiff.multret(t1)).length();
-		
-		/// Now we want to make sure that it is a "correct" colission where the current velocities are 
-		/// bringing the balls together. 
-		
-		
+		// they should have collided. 		
 		Log.w("Debuggin", "The times that work are " + t1 + " and " + t2);
 		pos.add(vel.multret(t1));
 		otherBall.setPos(otherBall.getPos().add(otherBall.getVel().multret(t1)));
 		posDiff = this.pos.diff(otherBall.getPos());
-			
-
-		/// There is a better way of checking this using normalized vectors I am sure.
 		
-		// I think we simply check if the projection of the velDiff on the posVEl vector  
-		/// If the distance between the balls is larger after a short time span, then 
+		if(posDiff.hasNan()){
+			Log.w("Debuggin", "PosDiff is");
+			posDiff.print();
+			Log.w("Debuggin", "VelDiff is");
+			velDiff.print();
+			Log.w("Debuggin", "Ball 1 pos is");
+			pos.print();
+			Log.w("Debuggin", "Ball 1 vel is");
+			vel.print();
+			Log.w("Debuggin", "Ball 2 pos is");
+			otherBall.getPos().print();
+			Log.w("Debuggin", "Ball 2 vel is");
+			otherBall.getVel().print();			
+			throw new RuntimeException();
+		}
+		
+		// We check if the current relative velocities will bring the balls further apart or not.
 		if(areSameDirection(posDiff, velDiff)) {
 			Log.w("Debuggin", "We think this is not a good colission to do ");
 			return; // We don't perform a colission since they will separate naturally.
 		}
 			 
 
-		// Make sure that it has indeed worked.
-//		double testDist = this.pos.diff(otherBall.getPos()).length();
 		
 		// innerProd =  < x1 - x2, v1 - v2 > 
 		// massFactor = 2 * m2 / (m1 + m2)
@@ -173,6 +169,9 @@ public class Ball {
 		
 		// (2 (k^2+l^2))
 		double frac = 2 * velDiff.abs();
+		
+		Log.w("Debuggin", "frac is " + frac);
+		
 		
 		double t1  = Math.sqrt((term1*term1) - term2) + term3;
 		double t2  = Math.sqrt((term1*term1) - term2) - term3;
@@ -212,13 +211,15 @@ public class Ball {
 		
 		// Create a virtual ball that is adjacent to this ball in direction
 		// of the touch.
-		touchDir.mult(size * 2);
-		Vector2d vBallPos = pos.add(touchDir);
-		Ball virtualBall = new Ball(vBallPos, dragVel);
-		
-		this.collide(virtualBall);
+//		touchDir.mult(size * 2);
+		updateForce(touchDir.multret(-dragVel.length()/20));
+//		Vector2d vBallPos = pos.add(touchDir);
+//		Ball virtualBall = new Ball(vBallPos, dragVel);
+//		Log.w("Debuggin", "Before colissions vel is ." + vel);
+//		this.collide(virtualBall);
+//		Log.w("Debuggin", "after colissions vel is ." + vel);
 		// Remove the virtual ball.
-		virtualBall = null;
+//		virtualBall = null;
 		unTouchedTime = 0;
 		return true;		
 	}

@@ -1,43 +1,11 @@
-1) Add preemptive colission detection 
-   same as with the walls, but this time it's a bit trickier
+1) Add gravity
 
-Okay, lets think about preemptive collision. I think we can write an 
-algorithm based on the following somewhat shaky model. We have two
-spheres moving along straight lines in euclidian space that are at
-some time t0 adjacent with one intersection, and we are looking at some
-time t1 where they are overlapping. Now the assumption is that moving
-either of these spheres along their straight path will equally move
-them further apart. Now since they are spheres, we can actually view 
-them as two points along these lines which must be no closer than
-r1 + r2 (in our normal case 2 * r1). So essentially the question is
-if the distance between these two points will increase linearly. Consider
-the case where one point is moving along the x axis and another the
-y axis. The distance between them is simply x^2 + y^2. If they both move
-outward with a constant speed v1, v2 we can find the point by
-   r1 + r2 = (tv1)^2 + (tv2)^2 => r1 + r2 = t^2(v1^2 + v2^2) =>
-=> t = sqrt( (r1 + r2) / (v1^2 + v2^2) ).
+2) Add number of lives indicator
 
-So I think we don't have to make that assumption? We can in general
-describe these trajectories in some way such as these, the question is
-if they can be solved in general. The real question so if there is a 
-way to do so that isn't too clunky and unreadable. 
+3) Replace the resources currently used
 
-Okay so the easier solution is to think of it in vector space.
-There is some vector V between p1 and p2. t * (v1 + v2)
-is the amount of change to V a duration of time imposes to this distance.
-|V - t(v1 + v2)| = D => has to be solvable I think. And indeed it is!
-|V - t(v1 + v2)|_x = (Vx - t(v1x + v2x))^2 = Vx^2 +  V*t*vTot + t^2*vTot
+4) Add sounds. 
 
-D = (Vx + tvx)^2 + (Vy + tvy)^2
-
-[Solved by Wolfram Alpha, solution in code]
-
-the QUESTION is if colission detection is even relevant, I think it is
-sufficient to set the positions of the spheres to where they would have
-been, which I guess we can do accurately with t and otherwise only
-in an ugly manner, and then that that the pre colissions velocity 
-is indeed decreasing the distance between the two spheres, which
-should further help eliminate sticking colissions. 
 2) CHange the order of function in gameWindow to be more logical. 
    and clean up the code (remove old log messages etc)
 

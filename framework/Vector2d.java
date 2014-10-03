@@ -115,10 +115,16 @@ public class Vector2d {
 		return this.x + this.y;
 	}
 	
+	/// returns if either of the two elements are NaN
+	public boolean hasNan(){
+		return (this.x == Double.NaN) || (this.y == Double.NaN);
+	}
+	
 	public void print(){
 		Log.w("Debuggin", "x = " + this.x + ", y = " + this.y);
 	}
 
+	
 	@Override
 	public String toString(){
 		return "x = " + this.x + ", y = " + this.y;

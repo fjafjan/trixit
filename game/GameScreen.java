@@ -84,7 +84,8 @@ public class GameScreen extends Screen {
 		// I think there should only be two states, either running or game over. No 
 		// menues and shit, smooth user experience!
 		if( score > (2*balls.size()) ){
-			addBall();
+			if(balls.size() < 2)
+				addBall();
 		}
 		if (state == GameState.Ready)
 			updateReady(touchEvents);
@@ -111,22 +112,7 @@ public class GameScreen extends Screen {
 		for (int i = 0; i < len; i++) {
 			TouchEvent event = touchEvents.get(i);
 			if (event.type == TouchEvent.TOUCH_DOWN){
-				int ballTouched = inBall(event.x, event.y, 0); 
-				if (ballTouched != -1){
-					score += 1;
-					if (random.nextDouble() < chanceOfMod){
-						addTennisBall();
-					}
-					// Rewrie this in some way to not be the longest line in the program by a mile.
-					Log.w("Debuggin", "We try to push the ball in some direction ");
-					Vector2d eventPos = new Vector2d(event.x, event.y);
-					Vector2d ballPos = balls.get(ballTouched).getPos();
-					Vector2d force = ballPos.diff(eventPos);
-
-					force.normalize();
-					balls.get(ballTouched).updateForce(force); 
-					Log.w("Debuggin", "We touch the ball, the resulting force is " + force.x + " " + force.y);
-				}
+				tryTouch(event);
 			}else if(event.type == TouchEvent.TOUCH_DRAGGED){
 				if(dragEvents.isEmpty()){
 					dragEvents.add(new DragEvent(event));
@@ -151,7 +137,6 @@ public class GameScreen extends Screen {
 		}
 		// We have checked all our touch events.
 		collideDragEvents(dragEvents, deltaTime);
-//		printDragEvents(dragEvents);
 		updateBall(deltaTime);
 	}
 
@@ -161,11 +146,17 @@ public class GameScreen extends Screen {
 			// For each such dragEvent we look at each "click"
 			DragEvent thisEvent = dragEvents.get(i);
 			ArrayList<TouchEvent> events = thisEvent.getEvents();
+			int end = events.size()-1;
+			if(events.get(0).x == events.get(end).x && events.get(0).y == events.get(end).y){
+				tryTouch(events.get(0));
+				continue;
+			}
+							
 			for (int j = 0; j < events.size(); j++) {
 				int ballTouched = inBall(events.get(j).x, events.get(j).y, 0);
 				if (ballTouched != -1){
 					// Make sure that this ball has not collided with this swipe before.
-					
+					Log.w("Debuggin", "Get swope.");
 					// Tries to swipe the ball, will return false if too recent.
 					if (balls.get(ballTouched).drag(events, j, deltaTime))
 						score += 1;
@@ -255,6 +246,28 @@ public class GameScreen extends Screen {
 		}
 	}
 
+	private void tryTouch(TouchEvent event){
+		int ballTouched = inBall(event.x, event.y, 0); 
+		// If we did not intersect with any ball then we just go back.
+		if (ballTouched == -1){
+			return;
+		}
+
+		score += 1;
+		if (random.nextDouble() < chanceOfMod){
+			addTennisBall();
+		}
+		
+		Log.w("Debuggin", "We try to push the ball in some direction ");
+		Vector2d eventPos = new Vector2d(event.x, event.y);
+		Vector2d ballPos = balls.get(ballTouched).getPos();
+		Vector2d force = ballPos.diff(eventPos);
+
+		force.normalize();
+		balls.get(ballTouched).updateForce(force); 
+		Log.w("Debuggin", "We touch the ball, the resulting force is " + force.x + " " + force.y);
+	}
+	
 	private void addTennisBall(){
 		for(int attempts = 0; attempts < 20 ; attempts++){
 			double testX = random.nextDouble() * gameWidth;
@@ -324,9 +337,9 @@ public class GameScreen extends Screen {
 		Graphics g = game.getGraphics();
 
 		g.drawString("Click to begin", 640, 300, paint);
-		for (int i = 0; i < balls.size(); i++) {
-			g.drawImage(Assets.ball, (int) balls.get(i).getX(),(int) balls.get(i).getY());			
-		}
+//		for (int i = 0; i < balls.size(); i++) {
+//			g.drawImage(Assets.ball, (int) balls.get(i).getX(),(int) balls.get(i).getY());			
+//		}
 	}
 
 	private void drawRunningUI() {
