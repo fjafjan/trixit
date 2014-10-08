@@ -183,8 +183,9 @@ public class GameScreen extends Screen {
 			
 			// THE FACT THAT WE DON'T UPDATE ALL BALLS FIRST AND CHECK FOR COLISSIONS AFTERWARDS
 			// IS ALMOST CERTAINLY WHY I STILL HAVE SOME WEIRD COLISSION PATTERNS!!
-			int collidedWith = inBall(pos, balls.get(i).getSize()/2.); 
-			if( collidedWith != -1){
+			int collidedWith = inBall(pos, balls.get(i).getSize()/2.);
+			Log.w("Debuggin", "We are colliding " + i + " and " + collidedWith);
+			if( collidedWith != -1 && collidedWith != i){
 				if(collidedWith == -2){
 					balls.get(i).collide(tennisball);
 				}else{
@@ -347,6 +348,8 @@ public class GameScreen extends Screen {
 			double ballSize = tennisball.getSize();
 			Vector2d ballPos = tennisball.getPos();
 			if ( pos.diff(ballPos).length()  < (ballSize  + radius)){
+				Log.w("Debuggin", "Something was inside a tennisball that I am pretty sure is null");
+				Log.w("Debuggin", "Tennisball is at " + tennisball.getPos());
 				return -2;
 			}
 		}
@@ -406,6 +409,7 @@ public class GameScreen extends Screen {
 //		}
 	}
 
+	
 	private void drawRunningUI() {
 		Graphics g = game.getGraphics();
 		g.clearScreen(0);
