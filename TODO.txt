@@ -1,8 +1,5 @@
-1) Add sounds. 
-	Add all the sounds and a random pick from one of them
-	Cut the sounds so that they are more responsive
-	
-		
+1) Publish	
+
 2) Add a nicer number of lives indicator
 
 3) Add tennis balls with bonuses
@@ -15,8 +12,10 @@
 	
 4) Print FPS
 
+5) Cut the sounds so that they are more responsive
+
+6) Consider that a swipe could hit multiple bals. 
 Known bugs:
-    Randomly the program shoul crash due to index out of bounds on menu screen
     New dist and old dist return different answers? unclear as heck why.
     
 

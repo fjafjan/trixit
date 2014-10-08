@@ -63,7 +63,7 @@ public class GameScreen extends Screen {
 		paint.setAntiAlias(true);
 		
 		paint2 = new Paint();
-		paint2.setTextSize(100);
+		paint2.setTextSize(30);
 		paint2.setTextAlign(Paint.Align.CENTER);
 		paint2.setAntiAlias(true);
 		paint2.setColor(Color.WHITE);
@@ -89,6 +89,7 @@ public class GameScreen extends Screen {
 
 	// Simply lets the user touch the screen to start the game. 
 	private void updateReady(List<TouchEvent> touchEvents) {
+		paint2.setTextSize(30);
 		if (touchEvents.size() > 0){
 			Log.w("Debuggin", "Game is now running");
 			state = GameState.Running;
@@ -160,16 +161,21 @@ public class GameScreen extends Screen {
 		}
 	}
 
-	private void printDragEvents(ArrayList<DragEvent> dragEvents) {
-		for (int i = 0; i < dragEvents.size(); i++) {
-			Log.w("Debuggin", "Dragevent nr " + dragEvents.get(i).id);
-			dragEvents.get(i).printEvents();
-		}
-	}
+//	private void printDragEvents(ArrayList<DragEvent> dragEvents) {
+//		for (int i = 0; i < dragEvents.size(); i++) {
+//			Log.w("Debuggin", "Dragevent nr " + dragEvents.get(i).id);
+//			dragEvents.get(i).printEvents();
+//		}
+//	}
 
 	private void updateBalls(double deltaTime){
 		for(int i=0 ; i < balls.size() ; i++){
 			balls.get(i).update(deltaTime);
+		}
+		if(tennisball != null){
+			tennisball.update(deltaTime);
+			if(tennisball.destroy)
+				tennisball = null;
 		}
 		for(int i=0 ; i < balls.size() ; i++){
 			Vector2d pos = balls.get(i).getPos();
@@ -177,16 +183,15 @@ public class GameScreen extends Screen {
 			
 			// THE FACT THAT WE DON'T UPDATE ALL BALLS FIRST AND CHECK FOR COLISSIONS AFTERWARDS
 			// IS ALMOST CERTAINLY WHY I STILL HAVE SOME WEIRD COLISSION PATTERNS!!
-			for(int j=i+1 ; j < balls.size() ; j++){
-				Vector2d pos2 = balls.get(j).getPos();
-
-				double dist = (pos2.diff(pos)).length();
-
-				if( dist < ballSize){
-					balls.get(i).collide(balls.get(j));
+			int collidedWith = inBall(pos, balls.get(i).getSize()/2.); 
+			if( collidedWith != -1){
+				if(collidedWith == -2){
+					balls.get(i).collide(tennisball);
+				}else{
+					balls.get(i).collide(balls.get(collidedWith));
 				}
 			}
-			/// We handle edge cases where the ball collides with a edge or wall below.
+			/// We handle edge cases where the ball collides with a wall below.
 			checkEdges(balls.get(i));			
 		}
 	}
@@ -276,9 +281,9 @@ public class GameScreen extends Screen {
 				// Destroy the tennis ball
 				tennisball = null;
 			}else{
-				Log.w("Debuggin", "Somehow the ball is entiher orignal or a tennisball. Weird stuff");
+				Log.w("Debuggin", "Somehow the ball is neither orignal or a tennisball. Weird stuff");
 			}
-		}		
+		}
 		// If we have collided with one of the edges
 		if (overstep > 0) {
 			playSound(Assets.bounces);
@@ -294,14 +299,20 @@ public class GameScreen extends Screen {
 		if (ballTouched == -1){
 			return;
 		}
-
-		score += 1;
-		if (random.nextDouble() < chanceOfMod){
-			addTennisBall();
-		}
 		// Plays one of the kick sounds. 
 		playSound(Assets.kicks);
 		
+		// We touched the tennisball
+		if (ballTouched == -2){
+			Vector2d eventPos = new Vector2d(event.x, event.y);
+			Vector2d ballPos = tennisball.getPos();
+			Vector2d force = ballPos.diff(eventPos);
+			force.normalize();
+			tennisball.updateForce(force); 
+			tennisball.destroy = true;
+			return;
+		}
+
 		Log.w("Debuggin", "We try to push the ball in some direction ");
 		Vector2d eventPos = new Vector2d(event.x, event.y);
 		Vector2d ballPos = balls.get(ballTouched).getPos();
@@ -310,6 +321,11 @@ public class GameScreen extends Screen {
 		force.normalize();
 		balls.get(ballTouched).updateForce(force); 
 		Log.w("Debuggin", "We touch the ball, the resulting force is " + force.x + " " + force.y);
+		score += 1;
+		if (random.nextDouble() < chanceOfMod){
+			addTennisBall();
+		}
+
 	}
 	
 
@@ -335,6 +351,10 @@ public class GameScreen extends Screen {
 			}
 		}
 		return -1;
+	}
+	
+	public int inBall(Vector2d pos, double radius){
+		return inBall(pos.x, pos.y, radius);
 	}
 	
 	private void playSound(Sound[] sounds){
@@ -389,19 +409,22 @@ public class GameScreen extends Screen {
 	private void drawRunningUI() {
 		Graphics g = game.getGraphics();
 		g.clearScreen(0);
-		
-		g.drawString("Score : " + score, gameWidth - 300, 150, paint2);
-		g.drawString("Lives left : " + livesleft, 100, 150, paint2);
+		g.drawString("Score : " + score, gameWidth - 250, 50, paint2);
+		g.drawString("Lives : " + livesleft, 100, 50, paint2);
 		for (int i = 0; i < balls.size(); i++) {
 			int ballX = (int) balls.get(i).getX() - (ballSize/2);
 			int ballY = (int)  balls.get(i).getY() - (ballSize/2);
-			g.drawImage(Assets.ball, ballX, ballY);			
+			g.drawImage(Assets.ball, ballX, ballY);	
+		}
+		if(tennisball != null){
+			g.drawImage(Assets.tennisball, (int) tennisball.getX(), (int) tennisball.getY());
 		}
 	}
 
     private void drawGameOverUI() {
         Graphics g = game.getGraphics();
-        g.drawRect(0, 0, 1281, 801, Color.BLACK);
+        paint2.setTextSize(100);
+        g.drawRect(0, 0, gameWidth+1, gameHeight+1, Color.BLACK);
         g.drawString("GAME OVER.", gameWidth/2, gameHeight/2, paint2);
     }
 
