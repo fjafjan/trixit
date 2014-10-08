@@ -1,13 +1,12 @@
 1) Add sounds. 
-
-
-1) Add number of lives indicator
-
-
-	2) CHange the order of function in gameWindow to be more logical. 
-   and clean up the code (remove old log messages etc)
+	Add all the sounds and a random pick from one of them
+	Cut the sounds so that they are more responsive
+	
+		
+2) Add a nicer number of lives indicator
 
 3) Add tennis balls with bonuses
+     Add a destroy variable that is checked at some point and use it.
      Add drawing and colission with TennisBall
      No gravity mode
      Slow speed mode

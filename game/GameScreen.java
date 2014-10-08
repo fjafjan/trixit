@@ -16,6 +16,7 @@ import com.trixit.framework.Screen;
 import com.trixit.framework.Game;
 import com.trixit.framework.Graphics;
 import com.trixit.framework.Input.TouchEvent;
+import com.trixit.framework.Sound;
 import com.trixit.framework.Vector2d;
 import com.trixit.game.Ball;
 import com.trixit.game.TennisBall;
@@ -38,6 +39,7 @@ public class GameScreen extends Screen {
 	TennisBall tennisball;
 	double chanceOfMod, tennisSpeed;
 	int gameHeight, gameWidth;
+	float volume;
 	
 	public GameScreen(Game game){
 		super(game);
@@ -53,6 +55,7 @@ public class GameScreen extends Screen {
 		balls.add(new Ball(gameWidth/2, gameHeight/2, 0,0));
 		// Initialize game object here
 		
+		volume = AudioManager.STREAM_MUSIC;
 		
 		paint = new Paint();
 		paint.setTextSize(30);
@@ -123,7 +126,7 @@ public class GameScreen extends Screen {
 //					Log.w("Debuggin", "We have another touch event of type " + event.type);
 					//Log.w("Debuggin", "For reference UP = " + TouchEvent.TOUCH_UP  + " dragged = " + TouchEvent.TOUCH_DRAGGED);			
 			}
-		}
+		}		
 		// We have checked all our touch events.
 		collideDragEvents(dragEvents, deltaTime);
 		// Moves all balls forward in time and checks for collisions.
@@ -167,6 +170,8 @@ public class GameScreen extends Screen {
 	private void updateBalls(double deltaTime){
 		for(int i=0 ; i < balls.size() ; i++){
 			balls.get(i).update(deltaTime);
+		}
+		for(int i=0 ; i < balls.size() ; i++){
 			Vector2d pos = balls.get(i).getPos();
 			// We check for collisions
 			
@@ -182,7 +187,7 @@ public class GameScreen extends Screen {
 				}
 			}
 			/// We handle edge cases where the ball collides with a edge or wall below.
-			checkEdges(i);			
+			checkEdges(balls.get(i));			
 		}
 	}
 	
@@ -210,6 +215,7 @@ public class GameScreen extends Screen {
 		double ballSize = tennisball.getSize();
 		for(int attempts = 0; attempts < 100 ; attempts++){
 			double testX = random.nextDouble() * gameWidth;
+			// We make sure that the ball is spawned in the upper half of the playing field. 
 			double testY = ((random.nextDouble()*0.5) - 0.5 ) * gameHeight;			
 			for (int i = 0; i < balls.size(); i++) {
 				if (inBall((int)testX, (int) testY, ballSize) == -1){
@@ -229,8 +235,8 @@ public class GameScreen extends Screen {
 	
 // Checks if a ball with index ballIndex is outside the game area and if so
 // call the correct bounce method. 
-	private void checkEdges(int ballIndex){
-		Ball ball = balls.get(ballIndex);
+	private void checkEdges(Ball ball){
+//		Ball ball = balls.get(ballIndex);
 		Vector2d pos = ball.getPos();
 		double ballSize = ball.getSize();
 		
@@ -240,32 +246,44 @@ public class GameScreen extends Screen {
 		double maxPosY = gameHeight - (ballSize/2);
 		
 		// overstep represent the amount the ball has went outside the
+		double overstep = 0;
 		// game area.
 		if(pos.x < minPosX){
-			double overstep = (minPosX - pos.x);
+			overstep = (minPosX - pos.x);
 			ball.bounceX(ballSize/2 + overstep );
 		/// If the ball edge goes outside the right wall
 		}else if(pos.x > maxPosX){			 
-			double overstep = (pos.x - maxPosX);
+			overstep = (pos.x - maxPosX);
 			ball.bounceX(maxPosX - overstep);
 		}
 		
 		/// If the edge of the ball goes outside the top wall/roof
 		if(pos.y < minPosY){
-			double overstep = minPosY - pos.y;
+			overstep = minPosY - pos.y;
 			ball.bounceY(minPosY + overstep);
 		/// If the edge of the ball goes outside the floor
 		}else if(pos.y > maxPosY){
-			double overstep = pos.y - maxPosY;
-			ball.bounceY(maxPosY - overstep);
-			
-			livesleft -= 1;
-			if (livesleft <= 0){
-				Log.w("Debuggin", "Game is over :(");
-				state = GameState.GameOver;
+			if(ball instanceof Ball){
+				overstep = pos.y - maxPosY;
+				ball.bounceY(maxPosY - overstep);
+				
+				livesleft -= 1;
+				if (livesleft <= 0){
+					Log.w("Debuggin", "Game is over :(");
+					state = GameState.GameOver;
+				}
+			}else if(ball instanceof TennisBall){
+				// Destroy the tennis ball
+				tennisball = null;
+			}else{
+				Log.w("Debuggin", "Somehow the ball is entiher orignal or a tennisball. Weird stuff");
 			}
 		}		
-		
+		// If we have collided with one of the edges
+		if (overstep > 0) {
+			playSound(Assets.bounces);
+		}
+
 	}
 
 	
@@ -281,8 +299,8 @@ public class GameScreen extends Screen {
 		if (random.nextDouble() < chanceOfMod){
 			addTennisBall();
 		}
-		
-		Assets.kick.play(AudioManager.STREAM_MUSIC);
+		// Plays one of the kick sounds. 
+		playSound(Assets.kicks);
 		
 		Log.w("Debuggin", "We try to push the ball in some direction ");
 		Vector2d eventPos = new Vector2d(event.x, event.y);
@@ -295,18 +313,34 @@ public class GameScreen extends Screen {
 	}
 	
 
-	
+	// Determines if the position at pos x, y is within a radius of either any ball or
+	// tennis ball. If so, it returns the index of the ball or -2 respectively. If not, 
+	// returns -1.
 	private int inBall(double x, double y, double radius){
 		// I should replace ball with "spheroid game object" for the sake of everyone involved.
 		// Check for all balls if this coordinate is .. within that.
 		Vector2d pos = new Vector2d(x, y);
 		for (int i = 0; i < balls.size(); i++) {
+			double ballSize = balls.get(i).getSize();
 			Vector2d ballPos = balls.get(i).getPos(); 
 			if ( pos.diff(ballPos).length()  < (ballSize  + radius)){
 				return i;
 			}
 		}
+		if(tennisball != null){
+			double ballSize = tennisball.getSize();
+			Vector2d ballPos = tennisball.getPos();
+			if ( pos.diff(ballPos).length()  < (ballSize  + radius)){
+				return -2;
+			}
+		}
 		return -1;
+	}
+	
+	private void playSound(Sound[] sounds){
+		int length = sounds.length;
+		int pick = random.nextInt(length);
+		sounds[pick].play(volume);
 	}
 	
 	private void updateGameOver(List<TouchEvent> touchEvents) {
@@ -357,6 +391,7 @@ public class GameScreen extends Screen {
 		g.clearScreen(0);
 		
 		g.drawString("Score : " + score, gameWidth - 300, 150, paint2);
+		g.drawString("Lives left : " + livesleft, 100, 150, paint2);
 		for (int i = 0; i < balls.size(); i++) {
 			int ballX = (int) balls.get(i).getX() - (ballSize/2);
 			int ballY = (int)  balls.get(i).getY() - (ballSize/2);

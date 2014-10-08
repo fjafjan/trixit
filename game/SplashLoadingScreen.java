@@ -2,6 +2,7 @@ package com.trixit.game;
 
 import android.util.Log;
 
+import com.trixit.framework.Sound;
 import com.trixit.framework.Game;
 import com.trixit.framework.Graphics;
 import com.trixit.framework.Screen;
@@ -26,14 +27,25 @@ public class SplashLoadingScreen extends Screen {
 		
 		// Load sounds
 		Assets.click = game.getAudio().createSound("explosion.ogg");
-		Assets.kick = game.getAudio().createSound("kick.wav");
+		Assets.kick = game.getAudio().createSound("kick-1.wav");
+		
+		int nrOfKickSounds = 5;
+		Assets.kicks = new Sound[nrOfKickSounds];
+		for (int i = 0; i < nrOfKickSounds; i++) {
+			Assets.kicks[i] = game.getAudio().createSound("kick-"+(i+1)+".wav");
+		}
+		
+		int nrOfBounceSounds = 1;
+		Assets.bounces = new Sound[nrOfBounceSounds];
+		for (int i = 0; i < nrOfBounceSounds; i++) {
+			Assets.bounces[i] = game.getAudio().createSound("ground-"+(i+1)+".wav");
+		}
 		
 		game.setScreen(new MainScreen(game));
 	}
 
 	@Override
-	public void paint(float deltaTime) {
-	
+	public void paint(float deltaTime) {	
 
 	}
 
