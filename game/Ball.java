@@ -19,8 +19,8 @@ public class Ball {
 		this.vel = new Vector2d(xVel, yVel);
 		size = 100; // I don't really make sure that this matches the size of the image right?
 		bounceCoef = 0.7;
-		weight = 1./20.;
-		gravity = 1; 
+		weight = 1./10.;
+		gravity = 0.2; 
 		unTouchedTime = 1000;
 	}
 	
@@ -71,30 +71,28 @@ public class Ball {
 	}
 
 	public Vector2d getVel(){
-	    
 		return new Vector2d(vel);
 	}
 	
-	public void setPos(Vector2d otherVec){
-		this.pos = new Vector2d(otherVec);
+	public double getSize(){
+		return size;
+	}
+	
+	public void setPos(Vector2d pos){
+		this.pos = new Vector2d(pos);
 	}
 
+	public void setVel(Vector2d vel){
+		this.vel = new Vector2d(vel);
+	}
 
 	/// Collides this ball with another ball and performs the required velocity changes on both balls.
-	/// TODO implement predictive collisions to avoid balls getting stuck in one another, 
-	/// weird looking bounces and so forth.
 	public void collide(Ball otherBall){
-		// v' = v + atm constant mass factor * v1 - v2 dot x1 - x2 / r^2 * x1 - x2
-		// http://en.wikipedia.org/wiki/Elastic_collision#Two-Dimensional_Collision_With_Two_Moving_Objects
-		// posDiff = x1 - x2
-		
-		// Okay so we want to find out the time it took since they actually intersected one another.
-		
-		
+		// Okay so we want to find out the time it took since they actually intersected one another.		
 		Vector2d posDiff = this.pos.diff(otherBall.getPos());
 		Vector2d velDiff = this.vel.diff(otherBall.getVel());
 
-		// Finds the two times when the balls will be 
+		// Finds the two times when the balls will be intersecting
 		double[] ts = findCollisionTime(posDiff, velDiff);
 		double t1 = ts[0];
 		double t2 = ts[1];
@@ -133,6 +131,9 @@ public class Ball {
 			return; // We don't perform a colission since they will separate naturally.
 		}
 			 
+		// v' = v + atm constant mass factor * v1 - v2 dot x1 - x2 / r^2 * x1 - x2
+		// http://en.wikipedia.org/wiki/Elastic_collision#Two-Dimensional_Collision_With_Two_Moving_Objects
+		// posDiff = x1 - x2
 
 		
 		// innerProd =  < x1 - x2, v1 - v2 > 
@@ -140,6 +141,7 @@ public class Ball {
 		// dist = || x1 - x2 || ^ 2
 		
 		double innerProd = posDiff.innerProd(velDiff);
+		
 		
 		// keep this as 1 atm. 
 		// otherBall.weight*2. / (this.weight + otherBall.weight);

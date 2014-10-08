@@ -1,8 +1,4 @@
 package com.trixit.game;
-/// Okay so what is left to do to make this actually work? Well first we need
-/// To actually move the assets that I have to the assets folder, I think I downloaded a shitty
-/// Football but I could always do that again. I should create some kind of menu? It doesnt matter
-/// What the hell it looks like I think.
 
 
 
@@ -13,6 +9,7 @@ import java.util.Random;
 
 import android.graphics.Paint;
 import android.graphics.Color;
+import android.media.AudioManager;
 import android.util.Log;
 
 import com.trixit.framework.Screen;
@@ -22,11 +19,9 @@ import com.trixit.framework.Input.TouchEvent;
 import com.trixit.framework.Vector2d;
 import com.trixit.game.Ball;
 import com.trixit.game.TennisBall;
-//import java.util.
 
 
 public class GameScreen extends Screen {
-	// unclear what the purpose of this is...
 	enum GameState{
 		Ready, Running, Paused, GameOver
 	}
@@ -36,33 +31,27 @@ public class GameScreen extends Screen {
 	// Create game objects here....
 	Paint paint, paint2;
 	
-	int score, livesleft;
+	int score, livesleft, maxBalls;
 	
 	int ballSize;
 	List<Ball> balls;
 	TennisBall tennisball;
-	double minXPos, maxXPos, minYPos, maxYPos, chanceOfMod, tennisSpeed;
+	double chanceOfMod, tennisSpeed;
 	int gameHeight, gameWidth;
 	
-	
-	//debugging variable/s
-	boolean collided = false;
 	public GameScreen(Game game){
 		super(game);
-		tennisSpeed = 20;
+		tennisSpeed = 10;
 		ballSize = 100;
 		livesleft = 10;
 		chanceOfMod = 0.1;
 		score = 0;
+		maxBalls = 10;
 		gameHeight = game.getGraphics().getHeight();
 		gameWidth =game.getGraphics().getWidth();
 		balls = new ArrayList<Ball>();
 		balls.add(new Ball(gameWidth/2, gameHeight/2, 0,0));
 		// Initialize game object here
-		// We start with a single ball at.. some random position on the screen?
-		// I should implement a position/couple class.
-//		ballX = gameWidth/2;
-//		ballY = gameHeight/2;
 		
 		
 		paint = new Paint();
@@ -137,7 +126,8 @@ public class GameScreen extends Screen {
 		}
 		// We have checked all our touch events.
 		collideDragEvents(dragEvents, deltaTime);
-		updateBall(deltaTime);
+		// Moves all balls forward in time and checks for collisions.
+		updateBalls(deltaTime);
 	}
 
 	private void collideDragEvents(ArrayList<DragEvent> dragEvents, double deltaTime) {
@@ -174,57 +164,25 @@ public class GameScreen extends Screen {
 		}
 	}
 
-	private void updateBall(double deltaTime){
+	private void updateBalls(double deltaTime){
 		for(int i=0 ; i < balls.size() ; i++){
 			balls.get(i).update(deltaTime);
 			Vector2d pos = balls.get(i).getPos();
-//			double xPos = balls.get(i).getX();
-//			double yPos = balls.get(i).getY();
 			// We check for collisions
+			
+			// THE FACT THAT WE DON'T UPDATE ALL BALLS FIRST AND CHECK FOR COLISSIONS AFTERWARDS
+			// IS ALMOST CERTAINLY WHY I STILL HAVE SOME WEIRD COLISSION PATTERNS!!
 			for(int j=i+1 ; j < balls.size() ; j++){
 				Vector2d pos2 = balls.get(j).getPos();
 
-//				double xPos2 = balls.get(j).getX();
-//				double yPos2 = balls.get(j).getY();
 				double dist = (pos2.diff(pos)).length();
-//				Vector2d oldDiff = new Vector2d(pos2.x - pos.x, pos2.y - pos.y);
-//				Vector2d newDiff =  (pos2.diff(pos));
-//				double olddist = Math.sqrt(((pos2.x - pos.x)*(pos2.x - pos.x)) + ((pos2.y - pos.y)*(pos2.y - pos2.y)));
-//				Log.w("Debuggin", "new dist is  " + dist + " and old dist is " + olddist);
-//				Log.w("Debuggin", "new diff is  " + newDiff + " and old dist is " + oldDiff);
-//				double dist = Math.sqrt((xPos2 - xPos)*(xPos2 - xPos) + (yPos2 - yPos)*(yPos2 - yPos)); 
+
 				if( dist < ballSize){
 					balls.get(i).collide(balls.get(j));
 				}
 			}
 			/// We handle edge cases where the ball collides with a edge or wall below.
-			
-			/// If the ball edge goes outside the left wall
-			if(pos.x < ballSize/2){
-				double overstep = (ballSize/2 - pos.x);
-				balls.get(i).bounceX(ballSize/2 + overstep );
-			/// If the ball edge goes outside the right wall
-			}else if(pos.x > gameWidth - (ballSize/2)){
-				// overstep represent the amount the ball has went outside the 
-				// game area.
-				double overstep = (pos.x - gameWidth + (ballSize/2));
-				balls.get(i).bounceX(gameWidth - (ballSize/2) - overstep);
-			}
-			
-			/// If the edge of the ball goes outside the top wall/roof
-			if(pos.y < ballSize/2){
-				double overstep = (ballSize/2 - pos.y);
-				balls.get(i).bounceY(ballSize/2 + overstep);
-			/// If the edge of the ball goes outside the floor
-			}else if(pos.y > gameHeight - (ballSize/2)){
-				double overstep = (pos.y - gameHeight + (ballSize/2));
-				balls.get(i).bounceY(gameHeight- (ballSize/2) - overstep);
-				livesleft -= 1;
-				if (livesleft == 0){
-					Log.w("Debuggin", "Game is over :(");
-					state = GameState.GameOver;
-				}
-			}		
+			checkEdges(i);			
 		}
 	}
 	
@@ -242,10 +200,76 @@ public class GameScreen extends Screen {
 					return;
 				}
 			}
-//			balls.add(new Ball(gameWidth/2, gameHeight/2,0,0));
 		}
 	}
 
+	// This is virtually identical to the above code, pretty sure I can do better
+	// than this...
+	private void addTennisBall(){
+		tennisball = new TennisBall(0,0,0,0);
+		double ballSize = tennisball.getSize();
+		for(int attempts = 0; attempts < 100 ; attempts++){
+			double testX = random.nextDouble() * gameWidth;
+			double testY = ((random.nextDouble()*0.5) - 0.5 ) * gameHeight;			
+			for (int i = 0; i < balls.size(); i++) {
+				if (inBall((int)testX, (int) testY, ballSize) == -1){
+					tennisball.setPos(new Vector2d(testX, testY));
+					// To actually get a random angle distribution we should sample the angle
+					double VelAngle = random.nextDouble()*2*3.1415926535;
+					double VelX = Math.sin(VelAngle) * tennisSpeed;
+					double VelY = Math.cos(VelAngle) * tennisSpeed;
+					tennisball.setVel(new Vector2d(VelX, VelY));
+					return;
+				}
+			}
+		}
+	}	
+
+	
+	
+// Checks if a ball with index ballIndex is outside the game area and if so
+// call the correct bounce method. 
+	private void checkEdges(int ballIndex){
+		Ball ball = balls.get(ballIndex);
+		Vector2d pos = ball.getPos();
+		double ballSize = ball.getSize();
+		
+		double minPosX = ballSize/2;  
+		double minPosY = ballSize/2;
+		double maxPosX = gameWidth - (ballSize/2);
+		double maxPosY = gameHeight - (ballSize/2);
+		
+		// overstep represent the amount the ball has went outside the
+		// game area.
+		if(pos.x < minPosX){
+			double overstep = (minPosX - pos.x);
+			ball.bounceX(ballSize/2 + overstep );
+		/// If the ball edge goes outside the right wall
+		}else if(pos.x > maxPosX){			 
+			double overstep = (pos.x - maxPosX);
+			ball.bounceX(maxPosX - overstep);
+		}
+		
+		/// If the edge of the ball goes outside the top wall/roof
+		if(pos.y < minPosY){
+			double overstep = minPosY - pos.y;
+			ball.bounceY(minPosY + overstep);
+		/// If the edge of the ball goes outside the floor
+		}else if(pos.y > maxPosY){
+			double overstep = pos.y - maxPosY;
+			ball.bounceY(maxPosY - overstep);
+			
+			livesleft -= 1;
+			if (livesleft <= 0){
+				Log.w("Debuggin", "Game is over :(");
+				state = GameState.GameOver;
+			}
+		}		
+		
+	}
+
+	
+	
 	private void tryTouch(TouchEvent event){
 		int ballTouched = inBall(event.x, event.y, 0); 
 		// If we did not intersect with any ball then we just go back.
@@ -258,6 +282,8 @@ public class GameScreen extends Screen {
 			addTennisBall();
 		}
 		
+		Assets.kick.play(AudioManager.STREAM_MUSIC);
+		
 		Log.w("Debuggin", "We try to push the ball in some direction ");
 		Vector2d eventPos = new Vector2d(event.x, event.y);
 		Vector2d ballPos = balls.get(ballTouched).getPos();
@@ -268,22 +294,6 @@ public class GameScreen extends Screen {
 		Log.w("Debuggin", "We touch the ball, the resulting force is " + force.x + " " + force.y);
 	}
 	
-	private void addTennisBall(){
-		for(int attempts = 0; attempts < 20 ; attempts++){
-			double testX = random.nextDouble() * gameWidth;
-			double testY = ((random.nextDouble()*0.5) - 0.5 ) * gameHeight;
-			double initVX = random.nextDouble() * tennisSpeed;
-			double initVY = Math.abs( random.nextDouble() * tennisSpeed);
-			for (int i = 0; i < balls.size(); i++) {
-				if (inBall((int)testX, (int) testY, 10) == -1){
-					// Add a reasonably high initial velocity
-					tennisball = new TennisBall(testX, testY, initVX, initVY);
-					return;
-				}
-			}
-		}
-	}	
-//			balls.add(new Ball(gameWidth/2, gameHeight/2,0,0));
 
 	
 	private int inBall(double x, double y, double radius){

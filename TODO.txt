@@ -1,12 +1,10 @@
-1) Add gravity
+1) Add sounds. 
 
-2) Add number of lives indicator
 
-3) Replace the resources currently used
+1) Add number of lives indicator
 
-4) Add sounds. 
 
-2) CHange the order of function in gameWindow to be more logical. 
+	2) CHange the order of function in gameWindow to be more logical. 
    and clean up the code (remove old log messages etc)
 
 3) Add tennis balls with bonuses
