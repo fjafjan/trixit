@@ -11,10 +11,4 @@ public class TennisBall extends Ball{
 		this.bounceCoef = 0.95;
 		destroy = false;
 	}
-	@Override
-	public void bounceY(double yPos) {
-		if(yPos > 0){
-			
-		}
-	}
 }

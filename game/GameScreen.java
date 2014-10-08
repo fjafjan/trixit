@@ -34,7 +34,7 @@ public class GameScreen extends Screen {
 	
 	int score, livesleft, maxBalls;
 	
-	int ballSize;
+//	int ballSize;
 	List<Ball> balls;
 	TennisBall tennisball;
 	double chanceOfMod, tennisSpeed;
@@ -44,9 +44,9 @@ public class GameScreen extends Screen {
 	public GameScreen(Game game){
 		super(game);
 		tennisSpeed = 10;
-		ballSize = 100;
+		//ballSize = 100;
 		livesleft = 10;
-		chanceOfMod = 0.1;
+		chanceOfMod = 0.8;
 		score = 0;
 		maxBalls = 10;
 		gameHeight = game.getGraphics().getHeight();
@@ -184,8 +184,8 @@ public class GameScreen extends Screen {
 			// THE FACT THAT WE DON'T UPDATE ALL BALLS FIRST AND CHECK FOR COLISSIONS AFTERWARDS
 			// IS ALMOST CERTAINLY WHY I STILL HAVE SOME WEIRD COLISSION PATTERNS!!
 			int collidedWith = inBall(pos, balls.get(i).getSize()/2.);
-			Log.w("Debuggin", "We are colliding " + i + " and " + collidedWith);
 			if( collidedWith != -1 && collidedWith != i){
+				Log.w("Debuggin", "We are colliding " + i + " and " + collidedWith);
 				if(collidedWith == -2){
 					balls.get(i).collide(tennisball);
 				}else{
@@ -198,19 +198,18 @@ public class GameScreen extends Screen {
 	}
 	
 	private void addBall(){
-		if (inBall((int) gameWidth/2, (int) gameHeight/2, ballSize) == -1){
+		if (inBall((int) gameWidth/2, (int) gameHeight/2, balls.get(0).getSize()) == -1){
 			balls.add(new Ball((int) gameWidth/2, (int) gameHeight/2, 0, 0));
 			return;
 		}
 		for(int attempts = 0; attempts < 100 ; attempts++){
 			double testX = random.nextDouble() * gameWidth;
-			double testY = ((random.nextDouble()*0.5) - 0.5 ) * gameHeight;
-			for (int i = 0; i < balls.size(); i++) {
-				if (inBall((int)testX, (int) testY, ballSize) == -1){
-					balls.add(new Ball(testX, testY, 0, 0));
-					return;
-				}
+			double testY = ((random.nextDouble()*0.5) - 0.5 ) * gameHeight;	
+			if (inBall((int)testX, (int) testY, balls.get(0).getSize()) == -1){
+				balls.add(new Ball(testX, testY, 0, 0));
+				return;
 			}
+			
 		}
 	}
 
@@ -223,16 +222,14 @@ public class GameScreen extends Screen {
 			double testX = random.nextDouble() * gameWidth;
 			// We make sure that the ball is spawned in the upper half of the playing field. 
 			double testY = ((random.nextDouble()*0.5) - 0.5 ) * gameHeight;			
-			for (int i = 0; i < balls.size(); i++) {
-				if (inBall((int)testX, (int) testY, ballSize) == -1){
-					tennisball.setPos(new Vector2d(testX, testY));
-					// To actually get a random angle distribution we should sample the angle
-					double VelAngle = random.nextDouble()*2*3.1415926535;
-					double VelX = Math.sin(VelAngle) * tennisSpeed;
-					double VelY = Math.cos(VelAngle) * tennisSpeed;
-					tennisball.setVel(new Vector2d(VelX, VelY));
-					return;
-				}
+			if (inBall((int)testX, (int) testY, ballSize) == -1){
+				tennisball.setPos(new Vector2d(testX, testY));
+				// To actually get a random angle distribution we should sample the angle
+				double VelAngle = random.nextDouble()*2*3.1415926535;
+				double VelX = Math.sin(VelAngle) * tennisSpeed;
+				double VelY = Math.cos(VelAngle) * tennisSpeed;
+				tennisball.setVel(new Vector2d(VelX, VelY));
+				return;
 			}
 		}
 	}	
@@ -416,12 +413,16 @@ public class GameScreen extends Screen {
 		g.drawString("Score : " + score, gameWidth - 250, 50, paint2);
 		g.drawString("Lives : " + livesleft, 100, 50, paint2);
 		for (int i = 0; i < balls.size(); i++) {
-			int ballX = (int) balls.get(i).getX() - (ballSize/2);
-			int ballY = (int)  balls.get(i).getY() - (ballSize/2);
+			double ballSize = balls.get(0).getSize();
+			int ballX = (int) (balls.get(i).getX() - (ballSize/2));
+			int ballY = (int) (balls.get(i).getY() - (ballSize/2));
 			g.drawImage(Assets.ball, ballX, ballY);	
 		}
 		if(tennisball != null){
-			g.drawImage(Assets.tennisball, (int) tennisball.getX(), (int) tennisball.getY());
+			double ballSize = tennisball.getSize();
+			int ballX = (int) (tennisball.getX() - (ballSize/2));
+			int ballY = (int) (tennisball.getY() - (ballSize/2));
+			g.drawImage(Assets.tennisball, ballX, ballY);
 		}
 	}
 
