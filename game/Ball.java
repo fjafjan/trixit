@@ -91,7 +91,8 @@ public class Ball {
 		// Okay so we want to find out the time it took since they actually intersected one another.		
 		Vector2d posDiff = this.pos.diff(otherBall.getPos());
 		Vector2d velDiff = this.vel.diff(otherBall.getVel());
-
+		Log.w("Debuggin", "posDiff is  " + posDiff + " and vellDiff is " + velDiff);
+		
 		// Finds the two times when the balls will be intersecting
 		double[] ts = findCollisionTime(posDiff, velDiff);
 		double t1 = ts[0];
@@ -173,6 +174,7 @@ public class Ball {
 		double frac = 2 * velDiff.abs();
 		
 		Log.w("Debuggin", "frac is " + frac);
+		Log.w("Debuggin", "term1 squared is " + (term1*term1) + " and term 2 is " + term2);
 		
 		
 		double t1  = Math.sqrt((term1*term1) - term2) + term3;

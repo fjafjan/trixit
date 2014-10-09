@@ -57,6 +57,7 @@ public class GameScreen extends Screen {
 		
 		volume = AudioManager.STREAM_MUSIC;
 		
+		
 		paint = new Paint();
 		paint.setTextSize(30);
 		paint.setTextAlign(Paint.Align.CENTER);
@@ -184,11 +185,14 @@ public class GameScreen extends Screen {
 			// THE FACT THAT WE DON'T UPDATE ALL BALLS FIRST AND CHECK FOR COLISSIONS AFTERWARDS
 			// IS ALMOST CERTAINLY WHY I STILL HAVE SOME WEIRD COLISSION PATTERNS!!
 			int collidedWith = inBall(pos, balls.get(i).getSize()/2.);
+			Log.w("Debuggin", "We test collision of " + i + " and " + collidedWith);
 			if( collidedWith != -1 && collidedWith != i){
 				Log.w("Debuggin", "We are colliding " + i + " and " + collidedWith);
 				if(collidedWith == -2){
+					Log.w("Debuggin", "We are colliding tennisball");
 					balls.get(i).collide(tennisball);
-				}else{
+				}else if(collidedWith < i){
+					Log.w("Debuggin", "We really collide " + i + " and " + collidedWith);
 					balls.get(i).collide(balls.get(collidedWith));
 				}
 			}
@@ -336,8 +340,11 @@ public class GameScreen extends Screen {
 		Vector2d pos = new Vector2d(x, y);
 		for (int i = 0; i < balls.size(); i++) {
 			double ballSize = balls.get(i).getSize();
-			Vector2d ballPos = balls.get(i).getPos(); 
-			if ( pos.diff(ballPos).length()  < (ballSize  + radius)){
+			Vector2d ballPos = balls.get(i).getPos();
+			if ( pos.diff(ballPos).length()  < ((ballSize/2)  + radius)){
+//  			double firstDiff = pos.diff(ballPos).length();
+//				double otherDiff = ballPos.diff(pos).length();
+//				Log.w("Debuggin", "firstDiff is " + firstDiff + ", otherDIff is " + otherDiff);
 				return i;
 			}
 		}
