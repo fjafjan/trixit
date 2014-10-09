@@ -32,31 +32,34 @@ public class GameScreen extends Screen {
 	// Create game objects here....
 	Paint paint, paint2;
 	
-	int score, livesleft, maxBalls;
+	int score, livesleft, maxBalls, addBallScore;
 	
 //	int ballSize;
 	List<Ball> balls;
 	TennisBall tennisball;
-	double chanceOfMod, tennisSpeed;
+	double chanceOfMod, tennisSpeed, forceConstant;
 	int gameHeight, gameWidth;
 	float volume;
 	
 	public GameScreen(Game game){
 		super(game);
-		tennisSpeed = 10;
-		//ballSize = 100;
-		livesleft = 10;
-		chanceOfMod = 0.8;
-		score = 0;
-		maxBalls = 10;
 		gameHeight = game.getGraphics().getHeight();
 		gameWidth =game.getGraphics().getWidth();
+		score = 0;
 		balls = new ArrayList<Ball>();
 		balls.add(new Ball(gameWidth/2, gameHeight/2, 0,0));
+		
+		// Here we have various options that can be tweaked and adjusted. 
+		tennisSpeed = 10;     /// The initial speed of a tennisball. 
+		livesleft = 10;       /// The number of bounces on the ground allowed. 
+		chanceOfMod = 0;      /// Chance of spawning a tennisball that in the future will modify the game in some way. 
+		forceConstant = 1.5;  /// Linearly increases the force applied by a click. 
+		maxBalls = 2;         /// The maximum number of balls. 
+		addBallScore = 10;    /// At each increment of this score another ball is added.
 		// Initialize game object here
 		
 		volume = AudioManager.STREAM_MUSIC;
-		
+		volume = 0;
 		
 		paint = new Paint();
 		paint.setTextSize(30);
@@ -76,8 +79,8 @@ public class GameScreen extends Screen {
 
 		// I think there should only be two states, either running or game over. No 
 		// menues and shit, smooth user experience!
-		if( score > (2*balls.size()) ){
-			if(balls.size() < 2)
+		if( score > (addBallScore*balls.size()) ){
+			if(balls.size() < maxBalls)
 				addBall();
 		}
 		if (state == GameState.Ready)
@@ -310,7 +313,7 @@ public class GameScreen extends Screen {
 			Vector2d ballPos = tennisball.getPos();
 			Vector2d force = ballPos.diff(eventPos);
 			force.normalize();
-			tennisball.updateForce(force); 
+			tennisball.updateForce(force.multret(forceConstant)); 
 			tennisball.destroy = true;
 			return;
 		}
@@ -321,7 +324,7 @@ public class GameScreen extends Screen {
 		Vector2d force = ballPos.diff(eventPos);
 
 		force.normalize();
-		balls.get(ballTouched).updateForce(force); 
+		balls.get(ballTouched).updateForce(force.multret(forceConstant)); 
 		Log.w("Debuggin", "We touch the ball, the resulting force is " + force.x + " " + force.y);
 		score += 1;
 		if (random.nextDouble() < chanceOfMod){

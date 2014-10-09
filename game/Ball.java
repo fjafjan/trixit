@@ -8,7 +8,6 @@ import com.trixit.framework.Input.TouchEvent;
 import com.trixit.framework.Vector2d;
 
 public class Ball {
-//	private double xPos, yPos, xVel, yVel;
 	private Vector2d pos;
 	private Vector2d vel;
 	private int unTouchedTime;
