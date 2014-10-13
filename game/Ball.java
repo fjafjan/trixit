@@ -10,10 +10,11 @@ import com.trixit.framework.Vector2d;
 public class Ball {
 	private Vector2d pos;
 	private Vector2d vel;
-	private int unTouchedTime, unClickedTime;
+	private int unTouchedTime;
+	
 	private static double slowDown = 1;
 	private static double gravity = 0.2;
-	
+	private static double minTouchTime = 25;
 	
 	public double size, bounceCoef, weight;
 	public Ball(double xPos,double yPos, double xVel, double yVel){
@@ -23,7 +24,6 @@ public class Ball {
 		bounceCoef = 0.7;
 		weight = 1./10.;
 		unTouchedTime = 800;
-		unClickedTime = 30;
 	}
 	
 	public Ball(Vector2d pos, Vector2d vel){
@@ -108,14 +108,14 @@ public class Ball {
 		// Okay so we want to find out the time it took since they actually intersected one another.
 		Vector2d posDiff = this.pos.diff(otherBall.getPos());
 		Vector2d velDiff = this.vel.diff(otherBall.getVel());
-		Log.w("Debuggin", "posDiff is  " + posDiff + " and vellDiff is " + velDiff);
+//		Log.w("Debuggin", "posDiff is  " + posDiff + " and vellDiff is " + velDiff);
 		
 		// Finds the two times when the balls will be intersecting
 		double[] ts = findCollisionTime(posDiff, velDiff);
 		double t1 = ts[0];
 		double t2 = ts[1];
 		
-		Log.w("Debuggin", "t1 is " + t1 + " t2 is " + t2);
+//		Log.w("Debuggin", "t1 is " + t1 + " t2 is " + t2);
  
 		if((posDiff.abs() - (size*size))  > 0)
 			Log.w("Debuggin", "!!!!!!!!!!!!!!!!!SOmething is messed up :/ !!!!!!!!!!!!!!!!!!!!!!!");
@@ -145,12 +145,14 @@ public class Ball {
 		// Debugging temporary stuff
 		posPost1 = new Vector2d(this.pos);
 		posPost2 = otherBall.getPos();
-		double moveDist1 = posPost1.diff(posPre1).length();
-		double moveDist2 = posPost2.diff(posPre2).length();
-		Log.w("Debuggin", "/n /n Posdiff is " + posDiff);
-		Log.w("Debuggin", "The balls were moved " + moveDist1 + " and " + moveDist2);
-		Log.w("Debuggin", "Our positions before were " + posPre1 + " and " + posPre2);
-		Log.w("Debuggin", "Our positions afterwards are " + posPost1 + " and " + posPost2 + pos + "");
+		
+		// Debugging code for colission probelms. 
+//		double moveDist1 = posPost1.diff(posPre1).length();
+//		double moveDist2 = posPost2.diff(posPre2).length();
+//		Log.w("Debuggin", "/n /n Posdiff is " + posDiff);
+//		Log.w("Debuggin", "The balls were moved " + moveDist1 + " and " + moveDist2);
+//		Log.w("Debuggin", "Our positions before were " + posPre1 + " and " + posPre2);
+//		Log.w("Debuggin", "Our positions afterwards are " + posPost1 + " and " + posPost2 + pos + "");
 		
 		
 		// We check if the current relative velocities will bring the balls further apart or not.
@@ -201,8 +203,8 @@ public class Ball {
 		// (2 (k^2+l^2))
 		double frac = 2 * velDiff.abs();
 		
-		Log.w("Debuggin", "frac is " + frac);
-		Log.w("Debuggin", "term1 squared is " + (term1*term1) + " and term 2 is " + term2);
+//		Log.w("Debuggin", "frac is " + frac);
+//		Log.w("Debuggin", "term1 squared is " + (term1*term1) + " and term 2 is " + term2);
 		
 		if( (term1 * term1) < term2){
 			throw new RuntimeException("We are trying to find the colission time of two objects that have not yet collided."); 
@@ -214,21 +216,30 @@ public class Ball {
 		double[] ans = {t1, t2};
 		return ans;
 	}
-
-	public double testTimeUpdate(double time, Ball otherBall){
-		Vector2d backupPos = new Vector2d(pos);
-		Vector2d otherPos = otherBall.getPos();
-		backupPos = backupPos.add(vel.multret(time));
-		otherPos = otherPos.add(otherBall.getVel().multret(time));
-		return backupPos.diff(otherPos).length();
+	
+	public boolean click(Vector2d clickPos, double forceConstant){
+		if (unTouchedTime < minTouchTime)
+			 return false;
+		unTouchedTime = 0;
+		
+		Vector2d force = pos.diff(clickPos);
+		force.normalize();
+		force.plus(new Vector2d(0, -0.5));
+		this.updateForce(force.multret(forceConstant)); 
+//		Log.w("Debuggin", "We touch the ball, the resulting force is " + force.x + " " + force.y);
+		return true;
 	}
+	
+	/// Returns true if the ball has been clicked too recently. 
 	
 	/// Collides the ball with a swipe from user represented in a list of TouchEvents and an index
 	/// i where the swipe first collided with the ball. deltaTime is the total duration of the swipe.
 	/// Returns if the ball was actually moved or if it was too recent.
 	public boolean drag(ArrayList<TouchEvent> events, int i, double deltaTime){
-		if( unTouchedTime < 40 )
+		if( unTouchedTime < minTouchTime ){
+			Log.w("Debuggin", "We choose to not detect this touch.  ." + vel);
 			return false;
+		}
 		// We haven\t recently been touched, so we proceed with touching.
 		// The position of impact
 		Vector2d touchPos = new Vector2d(events.get(i).x,events.get(i).y);

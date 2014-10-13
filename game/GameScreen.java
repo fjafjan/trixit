@@ -53,7 +53,7 @@ public class GameScreen extends Screen {
 		slowDown = 0.7;        	/// Linearly slows down the game. 
 		maxBalls = 2;         	/// The maximum number of balls. 
 		addBallScore = 10;    	/// At each increment of this score another ball is added.
-		gravity = 0.3;        	/// The gravitational acceleration at every
+		gravity = 0.25;        	/// The gravitational acceleration at every
 
 		
 		// Initialize game object here
@@ -152,6 +152,7 @@ public class GameScreen extends Screen {
 			DragEvent thisEvent = dragEvents.get(i);
 			ArrayList<TouchEvent> events = thisEvent.getEvents();
 			int end = events.size()-1;
+			// If this drag event has not moved we treat it as a click. 
 			if(events.get(0).x == events.get(end).x && events.get(0).y == events.get(end).y){
 				tryTouch(events.get(0));
 				continue;
@@ -197,12 +198,10 @@ public class GameScreen extends Screen {
 			int collidedWith = inBall(pos, balls.get(i).getSize()/2.);
 //			Log.w("Debuggin", "We test collision of " + i + " and " + collidedWith);
 			if( collidedWith != -1 && collidedWith != i){
-				Log.w("Debuggin", "We are colliding " + i + " and " + collidedWith);
 				if(collidedWith == -2){
 					Log.w("Debuggin", "We are colliding tennisball");
 					balls.get(i).collide(tennisball);
 				}else if(collidedWith < i){
-					Log.w("Debuggin", "We really collide " + i + " and " + collidedWith);
 					balls.get(i).collide(balls.get(collidedWith));
 				}
 			}
@@ -324,20 +323,16 @@ public class GameScreen extends Screen {
 			tennisball.destroy = true;
 			return;
 		}
-
-		Log.w("Debuggin", "We try to push the ball in some direction ");
+		
+//		Log.w("Debuggin", "We try to push the ball in some direction ");
 		Vector2d eventPos = new Vector2d(event.x, event.y);
-		Vector2d ballPos = balls.get(ballTouched).getPos();
-		Vector2d force = ballPos.diff(eventPos);
-
-		force.normalize();
-		balls.get(ballTouched).updateForce(force.multret(forceConstant)); 
-		Log.w("Debuggin", "We touch the ball, the resulting force is " + force.x + " " + force.y);
-		score += 1;
-		if (random.nextDouble() < chanceOfMod){
-			addTennisBall();
+		
+		if(balls.get(ballTouched).click(eventPos, forceConstant)){
+			score += 1;
+			if (random.nextDouble() < chanceOfMod){
+				addTennisBall();
+			}
 		}
-
 	}
 	
 

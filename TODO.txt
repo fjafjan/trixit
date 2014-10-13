@@ -1,18 +1,12 @@
 Known issues:
-Clicking results in 3 points awarded seemingly every time
-Clicking is unresponsible
 
-Steps for locating bugs:
-Remove number of lives (set to inf)
-We want to know position before and after colission?	
+0) Keep tweaking variables, check that time sensitivity is actually working
 
-1) Keep tweaking variables, check that time sensitivity is actually working
+1) Publish	
 
-2) Publish	
+2) Add a nicer number of lives indicator
 
-3) Add a nicer number of lives indicator
-
-4) Add tennis balls with bonuses
+3) Add tennis balls with bonuses
      Add a destroy variable that is checked at some point and use it.
      Add drawing and colission with TennisBall
      No gravity mode
