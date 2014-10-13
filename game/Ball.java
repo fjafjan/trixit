@@ -10,17 +10,20 @@ import com.trixit.framework.Vector2d;
 public class Ball {
 	private Vector2d pos;
 	private Vector2d vel;
-	private int unTouchedTime;
+	private int unTouchedTime, unClickedTime;
+	private static double slowDown = 1;
+	private static double gravity = 0.2;
 	
-	public double size, bounceCoef, weight, gravity;
+	
+	public double size, bounceCoef, weight;
 	public Ball(double xPos,double yPos, double xVel, double yVel){
 		this.pos = new Vector2d(xPos, yPos);
 		this.vel = new Vector2d(xVel, yVel);
 		size = 100; // I don't really make sure that this matches the size of the image right?
 		bounceCoef = 0.7;
 		weight = 1./10.;
-		gravity = 0.2; 
-		unTouchedTime = 1000;
+		unTouchedTime = 800;
+		unClickedTime = 30;
 	}
 	
 	public Ball(Vector2d pos, Vector2d vel){
@@ -39,16 +42,16 @@ public class Ball {
 	
 	/// TODO add the delta t here now we assume that the quadratic term is sufficiently small to ignore.
 	public void updateForce(Vector2d force){
-		vel.plus(force.multret(1./this.weight));
+		vel.plus(force.multret(slowDown/this.weight));
 	}
 
 	public void updateForce(double forceX, double forceY){
-		vel.plus(new Vector2d(forceX/weight, forceY/weight));
+		vel.plus(new Vector2d(forceX/weight, forceY/weight).multret(slowDown));
 	}
 	
 	public void update(double deltaTime){
-		pos.plus( (vel.multret(deltaTime)) );
-		vel.y += gravity * deltaTime;
+		pos.plus( (vel.multret(deltaTime * slowDown)) );
+		vel.y += gravity * deltaTime * slowDown;
 		unTouchedTime += deltaTime;
 //		Log.w("Debuggin", "unTouchedTime for this update is " + unTouchedTime);
 	}
@@ -85,9 +88,24 @@ public class Ball {
 		this.vel = new Vector2d(vel);
 	}
 
+	public void setSlowDown(double slowdown){
+		slowDown = slowdown;
+	}
+	
+	public void setGravity(double g){
+		gravity = g;
+	}
+	
 	/// Collides this ball with another ball and performs the required velocity changes on both balls.
 	public void collide(Ball otherBall){
-		// Okay so we want to find out the time it took since they actually intersected one another.		
+		// Temporary debugging
+		Vector2d posPre1 = new Vector2d(this.pos);
+		Vector2d posPre2 = otherBall.getPos();
+		Vector2d posPost1;
+		Vector2d posPost2;
+		
+		
+		// Okay so we want to find out the time it took since they actually intersected one another.
 		Vector2d posDiff = this.pos.diff(otherBall.getPos());
 		Vector2d velDiff = this.vel.diff(otherBall.getVel());
 		Log.w("Debuggin", "posDiff is  " + posDiff + " and vellDiff is " + velDiff);
@@ -104,8 +122,8 @@ public class Ball {
 
 		// Okay so we have correctly found t. now we want to first virtually move the balls back to where
 		// they should have collided. 		
-		Log.w("Debuggin", "The times that work are " + t1 + " and " + t2);
-		pos.add(vel.multret(t1));
+//		Log.w("Debuggin", "The times that work are " + t1 + " and " + t2);
+		pos = pos.add(vel.multret(t1));
 		otherBall.setPos(otherBall.getPos().add(otherBall.getVel().multret(t1)));
 		posDiff = this.pos.diff(otherBall.getPos());
 		
@@ -124,13 +142,24 @@ public class Ball {
 			otherBall.getVel().print();			
 			throw new RuntimeException();
 		}
+		// Debugging temporary stuff
+		posPost1 = new Vector2d(this.pos);
+		posPost2 = otherBall.getPos();
+		double moveDist1 = posPost1.diff(posPre1).length();
+		double moveDist2 = posPost2.diff(posPre2).length();
+		Log.w("Debuggin", "/n /n Posdiff is " + posDiff);
+		Log.w("Debuggin", "The balls were moved " + moveDist1 + " and " + moveDist2);
+		Log.w("Debuggin", "Our positions before were " + posPre1 + " and " + posPre2);
+		Log.w("Debuggin", "Our positions afterwards are " + posPost1 + " and " + posPost2 + pos + "");
+		
 		
 		// We check if the current relative velocities will bring the balls further apart or not.
 		if(areSameDirection(posDiff, velDiff)) {
 			Log.w("Debuggin", "We think this is not a good colission to do ");
 			return; // We don't perform a colission since they will separate naturally.
 		}
-			 
+		
+		 	 
 		// v' = v + atm constant mass factor * v1 - v2 dot x1 - x2 / r^2 * x1 - x2
 		// http://en.wikipedia.org/wiki/Elastic_collision#Two-Dimensional_Collision_With_Two_Moving_Objects
 		// posDiff = x1 - x2
@@ -175,7 +204,9 @@ public class Ball {
 		Log.w("Debuggin", "frac is " + frac);
 		Log.w("Debuggin", "term1 squared is " + (term1*term1) + " and term 2 is " + term2);
 		
-		
+		if( (term1 * term1) < term2){
+			throw new RuntimeException("We are trying to find the colission time of two objects that have not yet collided."); 
+		}
 		double t1  = Math.sqrt((term1*term1) - term2) + term3;
 		double t2  = Math.sqrt((term1*term1) - term2) - term3;
 		t1 = -t1 / frac;

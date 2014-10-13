@@ -37,27 +37,34 @@ public class GameScreen extends Screen {
 //	int ballSize;
 	List<Ball> balls;
 	TennisBall tennisball;
-	double chanceOfMod, tennisSpeed, forceConstant;
+	double chanceOfMod, tennisSpeed, forceConstant, slowDown, gravity;
 	int gameHeight, gameWidth;
 	float volume;
 	
+	
+
 	public GameScreen(Game game){
 		super(game);
+		// Here we have various options that can be tweaked and adjusted. 
+		tennisSpeed = 10;     	/// The initial speed of a tennisball. 
+		livesleft = 100000;       	/// The number of bounces on the ground allowed. 
+		chanceOfMod = 0;      	/// Chance of spawning a tennisball that in the future will modify the game in some way. 
+		forceConstant = 2;  	/// Linearly increases the force applied by a click. 
+		slowDown = 0.7;        	/// Linearly slows down the game. 
+		maxBalls = 2;         	/// The maximum number of balls. 
+		addBallScore = 10;    	/// At each increment of this score another ball is added.
+		gravity = 0.3;        	/// The gravitational acceleration at every
+
+		
+		// Initialize game object here
 		gameHeight = game.getGraphics().getHeight();
 		gameWidth =game.getGraphics().getWidth();
 		score = 0;
 		balls = new ArrayList<Ball>();
 		balls.add(new Ball(gameWidth/2, gameHeight/2, 0,0));
-		
-		// Here we have various options that can be tweaked and adjusted. 
-		tennisSpeed = 10;     /// The initial speed of a tennisball. 
-		livesleft = 10;       /// The number of bounces on the ground allowed. 
-		chanceOfMod = 0;      /// Chance of spawning a tennisball that in the future will modify the game in some way. 
-		forceConstant = 1.5;  /// Linearly increases the force applied by a click. 
-		maxBalls = 2;         /// The maximum number of balls. 
-		addBallScore = 10;    /// At each increment of this score another ball is added.
-		// Initialize game object here
-		
+		balls.get(0).setSlowDown(slowDown);
+		balls.get(0).setGravity(gravity);
+
 		volume = AudioManager.STREAM_MUSIC;
 		volume = 0;
 		
@@ -188,7 +195,7 @@ public class GameScreen extends Screen {
 			// THE FACT THAT WE DON'T UPDATE ALL BALLS FIRST AND CHECK FOR COLISSIONS AFTERWARDS
 			// IS ALMOST CERTAINLY WHY I STILL HAVE SOME WEIRD COLISSION PATTERNS!!
 			int collidedWith = inBall(pos, balls.get(i).getSize()/2.);
-			Log.w("Debuggin", "We test collision of " + i + " and " + collidedWith);
+//			Log.w("Debuggin", "We test collision of " + i + " and " + collidedWith);
 			if( collidedWith != -1 && collidedWith != i){
 				Log.w("Debuggin", "We are colliding " + i + " and " + collidedWith);
 				if(collidedWith == -2){
