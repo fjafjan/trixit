@@ -21,7 +21,8 @@ public class SplashLoadingScreen extends Screen {
 		
 		Graphics g = game.getGraphics();
 		// Load images
-		Assets.menu = g.newImage("menu.jpg", ImageFormat.RGB565);
+		Assets.menuPortrait = g.newImage("menu_portrait.jpg", ImageFormat.RGB565);
+		Assets.menuLandscape = g.newImage("menu_landscape.jpg", ImageFormat.RGB565);
 		Assets.ball = g.newImage("ball2.png", ImageFormat.ARGB4444);
 		Assets.tennisball = g.newImage("tennisball.png", ImageFormat.ARGB4444);
 		

@@ -32,13 +32,13 @@ public class GameScreen extends Screen {
 	// Create game objects here....
 	Paint paint, paint2;
 	
-	int score, livesleft, maxBalls, addBallScore;
+	int score, livesleft, maxBalls, addBallScore, noFailScore;
 	
 //	int ballSize;
 	List<Ball> balls;
 	TennisBall tennisball;
 	double chanceOfMod, tennisSpeed, forceConstant, slowDown, gravity;
-	int gameHeight, gameWidth;
+	int gameHeight, gameWidth, startVel;
 	float volume;
 	
 	
@@ -47,21 +47,22 @@ public class GameScreen extends Screen {
 		super(game);
 		// Here we have various options that can be tweaked and adjusted. 
 		tennisSpeed = 10;     	/// The initial speed of a tennisball. 
-		livesleft = 100000;       	/// The number of bounces on the ground allowed. 
+		livesleft = 3;       	/// The number of bounces on the ground allowed. 
 		chanceOfMod = 0;      	/// Chance of spawning a tennisball that in the future will modify the game in some way. 
-		forceConstant = 2;  	/// Linearly increases the force applied by a click. 
+		forceConstant = 1.9;  	/// Linearly increases the force applied by a click. 
 		slowDown = 0.7;        	/// Linearly slows down the game. 
-		maxBalls = 2;         	/// The maximum number of balls. 
-		addBallScore = 10;    	/// At each increment of this score another ball is added.
-		gravity = 0.25;        	/// The gravitational acceleration at every
-
+		maxBalls = 3;         	/// The maximum number of balls. 
+		addBallScore = 5;    	/// At each increment of this score another ball is added.
+		gravity = 0.28;        	/// The gravitational acceleration at every
+		startVel = 12;			/// The initial vertical velicity of a new ball.
 		
 		// Initialize game object here
 		gameHeight = game.getGraphics().getHeight();
 		gameWidth =game.getGraphics().getWidth();
 		score = 0;
+		noFailScore = 0;
 		balls = new ArrayList<Ball>();
-		balls.add(new Ball(gameWidth/2, gameHeight/2, 0,0));
+		addBall();
 		balls.get(0).setSlowDown(slowDown);
 		balls.get(0).setGravity(gravity);
 
@@ -86,7 +87,7 @@ public class GameScreen extends Screen {
 
 		// I think there should only be two states, either running or game over. No 
 		// menues and shit, smooth user experience!
-		if( score > (addBallScore*balls.size()) ){
+		if( noFailScore > (addBallScore*balls.size()) ){
 			if(balls.size() < maxBalls)
 				addBall();
 		}
@@ -164,8 +165,10 @@ public class GameScreen extends Screen {
 					// Make sure that this ball has not collided with this swipe before.
 					Log.w("Debuggin", "Get swope.");
 					// Tries to swipe the ball, will return false if too recent.
-					if (balls.get(ballTouched).drag(events, j, deltaTime))
+					if (balls.get(ballTouched).drag(events, j, deltaTime)){
 						score += 1;
+						noFailScore += 1;
+					}
 				}
 			}
 			
@@ -211,15 +214,19 @@ public class GameScreen extends Screen {
 	}
 	
 	private void addBall(){
+		if (balls.isEmpty()){
+			balls.add(new Ball((int) gameWidth/2, (int) gameHeight/2, 0, -startVel));
+			return;
+		}
 		if (inBall((int) gameWidth/2, (int) gameHeight/2, balls.get(0).getSize()) == -1){
-			balls.add(new Ball((int) gameWidth/2, (int) gameHeight/2, 0, 0));
+			balls.add(new Ball((int) gameWidth/2, (int) gameHeight/2, 0, -startVel));
 			return;
 		}
 		for(int attempts = 0; attempts < 100 ; attempts++){
 			double testX = random.nextDouble() * gameWidth;
 			double testY = ((random.nextDouble()*0.5) - 0.5 ) * gameHeight;	
 			if (inBall((int)testX, (int) testY, balls.get(0).getSize()) == -1){
-				balls.add(new Ball(testX, testY, 0, 0));
+				balls.add(new Ball(testX, testY, 0, -startVel));
 				return;
 			}
 			
@@ -282,7 +289,10 @@ public class GameScreen extends Screen {
 			if(ball instanceof Ball){
 				overstep = pos.y - maxPosY;
 				ball.bounceY(maxPosY - overstep);
-				
+				balls.remove(ball);
+				if (balls.isEmpty())
+					addBall();
+				noFailScore = 0;
 				livesleft -= 1;
 				if (livesleft <= 0){
 					Log.w("Debuggin", "Game is over :(");
@@ -329,6 +339,7 @@ public class GameScreen extends Screen {
 		
 		if(balls.get(ballTouched).click(eventPos, forceConstant)){
 			score += 1;
+			noFailScore += 1;
 			if (random.nextDouble() < chanceOfMod){
 				addTennisBall();
 			}

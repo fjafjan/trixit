@@ -1,10 +1,13 @@
 Known issues:
 
-0) Keep tweaking variables, check that time sensitivity is actually working
+0) Keep tweaking variables
 
-1) Publish	
+1) make addBallScore a list and check against the index of it. 
 
-2) Add a nicer number of lives indicator
+2) Add highscore.
+
+2) Add a nicer number of lives indicator.
+
 
 3) Add tennis balls with bonuses
      Add a destroy variable that is checked at some point and use it.

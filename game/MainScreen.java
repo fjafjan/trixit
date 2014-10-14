@@ -45,7 +45,11 @@ public class MainScreen extends Screen {
 	@Override
 	public void paint(float deltaTime) {
 		Graphics g = game.getGraphics();
-		g.drawImage(Assets.menu, 0, 0);
+		if(g.getHeight() > g.getWidth()){ // portrait
+			g.drawImage(Assets.menuPortrait, 0, 0);
+		}else{
+			g.drawImage(Assets.menuLandscape, 0, 0);
+		}
 	}
 
 	@Override

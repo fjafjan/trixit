@@ -224,8 +224,10 @@ public class Ball {
 		
 		Vector2d force = pos.diff(clickPos);
 		force.normalize();
-		force.plus(new Vector2d(0, -0.5));
-		this.updateForce(force.multret(forceConstant)); 
+		force.y = -1;
+		force.normalize();
+		
+		vel = force.multret(forceConstant * slowDown / weight);
 //		Log.w("Debuggin", "We touch the ball, the resulting force is " + force.x + " " + force.y);
 		return true;
 	}
