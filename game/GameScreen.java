@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Random;
 
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.graphics.Paint;
 import android.graphics.Color;
 import android.media.AudioManager;
@@ -28,6 +30,7 @@ public class GameScreen extends Screen {
 	}
 	Random random = new Random();
 	GameState state = GameState.Ready;
+	SharedPreferences settings;
 
 	// Create game objects here....
 	Paint paint, paint2;
@@ -38,7 +41,7 @@ public class GameScreen extends Screen {
 	List<Ball> balls;
 	TennisBall tennisball;
 	double chanceOfMod, tennisSpeed, forceConstant, slowDown, gravity;
-	int gameHeight, gameWidth, startVel;
+	int gameHeight, gameWidth, startVel, highScore;
 	float volume;
 	
 	
@@ -67,7 +70,6 @@ public class GameScreen extends Screen {
 		balls.get(0).setGravity(gravity);
 
 		volume = AudioManager.STREAM_MUSIC;
-		volume = 0;
 		
 		paint = new Paint();
 		paint.setTextSize(30);
@@ -79,6 +81,9 @@ public class GameScreen extends Screen {
 		paint2.setTextAlign(Paint.Align.CENTER);
 		paint2.setAntiAlias(true);
 		paint2.setColor(Color.WHITE);
+
+		settings = game.getSettings();
+		highScore = getHighScore();
 	} 
 
 	@Override
@@ -214,6 +219,7 @@ public class GameScreen extends Screen {
 	}
 	
 	private void addBall(){
+		noFailScore = 0;
 		if (balls.isEmpty()){
 			balls.add(new Ball((int) gameWidth/2, (int) gameHeight/2, 0, -startVel));
 			return;
@@ -296,6 +302,7 @@ public class GameScreen extends Screen {
 				livesleft -= 1;
 				if (livesleft <= 0){
 					Log.w("Debuggin", "Game is over :(");
+					checkHighScore();
 					state = GameState.GameOver;
 				}
 			}else if(ball instanceof TennisBall){
@@ -315,7 +322,7 @@ public class GameScreen extends Screen {
 	
 	
 	private void tryTouch(TouchEvent event){
-		int ballTouched = inBall(event.x, event.y, 0); 
+		int ballTouched = inBall(event.x, event.y, touchRadius); 
 		// If we did not intersect with any ball then we just go back.
 		if (ballTouched == -1){
 			return;
@@ -351,7 +358,7 @@ public class GameScreen extends Screen {
 	// tennis ball. If so, it returns the index of the ball or -2 respectively. If not, 
 	// returns -1.
 	private int inBall(double x, double y, double radius){
-		// I should replace ball with "spheroid game object" for the sake of everyone involved.
+		// I should replace ball with "spheroid g object" for the sake of everyone involved.
 		// Check for all balls if this coordinate is .. within that.
 		Vector2d pos = new Vector2d(x, y);
 		for (int i = 0; i < balls.size(); i++) {
@@ -423,20 +430,41 @@ public class GameScreen extends Screen {
 	private void drawReadyUI() {
 		Graphics g = game.getGraphics();
 
-		g.drawString("Click to begin", 640, 300, paint);
+		g.drawString("Click to begin", gameWidth/2, gameHeight/2, paint);
 //		for (int i = 0; i < balls.size(); i++) {
 //			g.drawImage(Assets.ball, (int) balls.get(i).getX(),(int) balls.get(i).getY());			
 //		}
 	}
 
+	private int getHighScore(){		
+		if(settings.contains("highScore")){
+			highScore = settings.getInt("highScore", 0);
+			return highScore;
+		}else{
+			Editor edit = settings.edit();
+			edit.putInt("highScore", 0);
+			edit.commit();
+			return 0;
+		}
+	}
+
+	private void checkHighScore(){
+		if (score > highScore){
+			Editor edit = settings.edit();
+			edit.putInt("highScore", score);
+			edit.commit();
+		}
+	}
 	
 	private void drawRunningUI() {
 		Graphics g = game.getGraphics();
 		g.clearScreen(0);
-		g.drawString("Score : " + score, gameWidth - 250, 50, paint2);
+		g.drawString("Score : " + score, gameWidth - 400, 50, paint2);
 		g.drawString("Lives : " + livesleft, 100, 50, paint2);
+		g.drawString("Highscore : " + highScore, gameWidth - 200, 50, paint2);
+
 		for (int i = 0; i < balls.size(); i++) {
-			double ballSize = balls.get(0).getSize();
+			double ballSize = balls.get(0).getSize();		
 			int ballX = (int) (balls.get(i).getX() - (ballSize/2));
 			int ballY = (int) (balls.get(i).getY() - (ballSize/2));
 			g.drawImage(Assets.ball, ballX, ballY);	

@@ -2,6 +2,8 @@ package com.trixit.framework.implementation;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
@@ -25,6 +27,7 @@ public abstract class AndroidGame extends Activity implements Game{
     Input input;
     FileIO fileIO;
     Screen screen;
+    SharedPreferences settings;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -59,6 +62,9 @@ public abstract class AndroidGame extends Activity implements Game{
         input = new AndroidInput(this, renderView, scaleX, scaleY);
         screen = getInitScreen();
         
+        // Get the saved settings (including things like high score etc)
+        settings = getPreferences(0);
+
         // Set the screen to show our renderer.
         setContentView(renderView);
        
@@ -123,10 +129,13 @@ public abstract class AndroidGame extends Activity implements Game{
         return screen;
     }
 
-    // I guess this is where we will implement the actual game?
 	@Override
 	public Screen getInitScreen() {
 		// TODO Auto-generated method stub
 		return null;
+	}
+	
+	public SharedPreferences getSettings(){
+		return settings;
 	}
 }

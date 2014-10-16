@@ -1,5 +1,7 @@
 package com.trixit.framework;
 
+import android.content.SharedPreferences;
+
 // Let's see if this seems like a reasonable idea, I would say that it does. 
 public interface Game {
 	public Audio getAudio();
@@ -15,4 +17,6 @@ public interface Game {
     public Screen getCurrentScreen();
 
     public Screen getInitScreen();
+    
+    public SharedPreferences getSettings();
 }
