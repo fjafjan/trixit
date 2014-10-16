@@ -41,6 +41,7 @@ public class GameScreen extends Screen {
 	List<Ball> balls;
 	TennisBall tennisball;
 	double chanceOfMod, tennisSpeed, forceConstant, slowDown, gravity;
+	double touchRadius;
 	int gameHeight, gameWidth, startVel, highScore;
 	float volume;
 	
@@ -49,7 +50,6 @@ public class GameScreen extends Screen {
 	public GameScreen(Game game){
 		super(game);
 		// Here we have various options that can be tweaked and adjusted. 
-		tennisSpeed = 10;     	/// The initial speed of a tennisball. 
 		livesleft = 3;       	/// The number of bounces on the ground allowed. 
 		chanceOfMod = 0;      	/// Chance of spawning a tennisball that in the future will modify the game in some way. 
 		forceConstant = 1.9;  	/// Linearly increases the force applied by a click. 
@@ -58,6 +58,8 @@ public class GameScreen extends Screen {
 		addBallScore = 5;    	/// At each increment of this score another ball is added.
 		gravity = 0.28;        	/// The gravitational acceleration at every
 		startVel = 12;			/// The initial vertical velicity of a new ball.
+		tennisSpeed = 10;     	/// The initial speed of a tennisball. 
+		touchRadius = 50;       /// The radius of a touch point for collision detection, aka finger thickness.
 		
 		// Initialize game object here
 		gameHeight = game.getGraphics().getHeight();
@@ -165,7 +167,7 @@ public class GameScreen extends Screen {
 			}
 							
 			for (int j = 0; j < events.size(); j++) {
-				int ballTouched = inBall(events.get(j).x, events.get(j).y, 0);
+				int ballTouched = inBall(events.get(j).x, events.get(j).y, touchRadius);
 				if (ballTouched != -1){
 					// Make sure that this ball has not collided with this swipe before.
 					Log.w("Debuggin", "Get swope.");
@@ -477,11 +479,9 @@ public class GameScreen extends Screen {
 		}
 	}
 
+	
     private void drawGameOverUI() {
-        Graphics g = game.getGraphics();
-        paint2.setTextSize(100);
-        g.drawRect(0, 0, gameWidth+1, gameHeight+1, Color.BLACK);
-        g.drawString("GAME OVER.", gameWidth/2, gameHeight/2, paint2);
+    	game.setScreen(new EndScreen(game, score));
     }
 
 	@Override
