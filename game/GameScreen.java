@@ -59,7 +59,7 @@ public class GameScreen extends Screen {
 		gravity = 0.28;        	/// The gravitational acceleration at every
 		startVel = 12;			/// The initial vertical velicity of a new ball.
 		tennisSpeed = 10;     	/// The initial speed of a tennisball. 
-		touchRadius = 50;       /// The radius of a touch point for collision detection, aka finger thickness.
+		touchRadius = 35;       /// The radius of a touch point for collision detection, aka finger thickness.
 		
 		// Initialize game object here
 		gameHeight = game.getGraphics().getHeight();
@@ -329,11 +329,10 @@ public class GameScreen extends Screen {
 		if (ballTouched == -1){
 			return;
 		}
-		// Plays one of the kick sounds. 
-		playSound(Assets.kicks);
 		
 		// We touched the tennisball
 		if (ballTouched == -2){
+			// Play a special tennisball sound I think. 
 			Vector2d eventPos = new Vector2d(event.x, event.y);
 			Vector2d ballPos = tennisball.getPos();
 			Vector2d force = ballPos.diff(eventPos);
@@ -347,6 +346,9 @@ public class GameScreen extends Screen {
 		Vector2d eventPos = new Vector2d(event.x, event.y);
 		
 		if(balls.get(ballTouched).click(eventPos, forceConstant)){
+			// Plays one of the kick sounds. 
+			playSound(Assets.kicks);
+
 			score += 1;
 			noFailScore += 1;
 			if (random.nextDouble() < chanceOfMod){
@@ -396,14 +398,6 @@ public class GameScreen extends Screen {
 	}
 	
 	private void updateGameOver(List<TouchEvent> touchEvents) {
-		for (int i = 0; i < touchEvents.size(); i++) {
-			TouchEvent event = touchEvents.get(i);
-			if (event.type == TouchEvent.TOUCH_DOWN) {
-				nullify();
-				game.setScreen(new MainScreen(game));
-				return;	
-			}
-		}
 	}
 
 
@@ -433,9 +427,6 @@ public class GameScreen extends Screen {
 		Graphics g = game.getGraphics();
 
 		g.drawString("Click to begin", gameWidth/2, gameHeight/2, paint);
-//		for (int i = 0; i < balls.size(); i++) {
-//			g.drawImage(Assets.ball, (int) balls.get(i).getX(),(int) balls.get(i).getY());			
-//		}
 	}
 
 	private int getHighScore(){		
