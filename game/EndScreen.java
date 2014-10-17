@@ -190,7 +190,7 @@ public class EndScreen extends Screen{
 	}
 	
 	private void drawLongString(String s, int xPos, int yPos, int textSize){
-		int maxLength = 25;
+		int maxLength = 30;
 		Graphics g = game.getGraphics();
 		
 		// If there are no newlines.

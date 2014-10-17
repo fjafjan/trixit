@@ -259,7 +259,7 @@ public class Ball {
 		// Create a virtual ball that is adjacent to this ball in direction
 		// of the touch.
 //		touchDir.mult(size * 2);
-		updateForce(touchDir.multret(-dragVel.length()/20));
+		updateForce(touchDir.multret(-dragVel.length()/15));
 //		Vector2d vBallPos = pos.add(touchDir);
 //		Ball virtualBall = new Ball(vBallPos, dragVel);
 //		Log.w("Debuggin", "Before colissions vel is ." + vel);
