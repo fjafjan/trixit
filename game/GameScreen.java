@@ -20,6 +20,7 @@ import com.trixit.framework.Graphics;
 import com.trixit.framework.Input.TouchEvent;
 import com.trixit.framework.Sound;
 import com.trixit.framework.Vector2d;
+import com.trixit.framework.implementation.AndroidGraphics;
 import com.trixit.game.Ball;
 import com.trixit.game.TennisBall;
 
@@ -39,16 +40,19 @@ public class GameScreen extends Screen {
 	
 //	int ballSize;
 	List<Ball> balls;
+	Ball testBall;
 	TennisBall tennisball;
 	double chanceOfMod, tennisSpeed, forceConstant, slowDown, gravity;
-	double touchRadius;
+	double touchRadius, livesIndFactor;
 	int gameHeight, gameWidth, startVel, highScore;
 	float volume;
 	
 	
-
+	
 	public GameScreen(Game game){
 		super(game);
+		
+		
 		// Here we have various options that can be tweaked and adjusted. 
 		livesleft = 3;       	/// The number of bounces on the ground allowed. 
 		chanceOfMod = 0;      	/// Chance of spawning a tennisball that in the future will modify the game in some way. 
@@ -60,20 +64,24 @@ public class GameScreen extends Screen {
 		startVel = 12;			/// The initial vertical velicity of a new ball.
 		tennisSpeed = 10;     	/// The initial speed of a tennisball. 
 		touchRadius = 35;       /// The radius of a touch point for collision detection, aka finger thickness.
+		livesIndFactor = 0.4;	/// How much smaller the little balls indicating lives left are. 
 		
 		// Initialize game object here
-		gameHeight = game.getGraphics().getHeight();
-		gameWidth =game.getGraphics().getWidth();
-		score = 0;
-		noFailScore = 0;
-		balls = new ArrayList<Ball>();
-		addBall();
-		balls.get(0).setSlowDown(slowDown);
-		balls.get(0).setGravity(gravity);
+		gameHeight = game.getGraphics().getHeight();/// Yeah yeah. The height of the game.
+		gameWidth =game.getGraphics().getWidth();	/// The diagonal of the square... no it's just the width.
+		score = 0;									/// The score. Duh. 
+		noFailScore = 0;							/// The number of points without dropping a ball
+		balls = new ArrayList<Ball>();				/// The list of all balls in use.
+		addBall();									/// We add the first ball to the game.
+		testBall = new Ball(0,0,0,0);         		/// Used for getting various ball properties, 
+													/// but never drawn or updated etc.
+		balls.get(0).setSlowDown(slowDown);			/// We set the slowdown factor of ALL balls (static)
+		balls.get(0).setGravity(gravity);			/// We set the gravity constant of ALL balls 
 
-		volume = AudioManager.STREAM_MUSIC;
+		volume = AudioManager.STREAM_MUSIC;			/// We set the volume of the game to be the 
+													/// current music volume
 		
-		paint = new Paint();
+		paint = new Paint();						/// We create two separate paints, I think this is bad.
 		paint.setTextSize(30);
 		paint.setTextAlign(Paint.Align.CENTER);
 		paint.setAntiAlias(true);
@@ -84,8 +92,8 @@ public class GameScreen extends Screen {
 		paint2.setAntiAlias(true);
 		paint2.setColor(Color.WHITE);
 
-		settings = game.getSettings();
-		highScore = getHighScore();
+		settings = game.getSettings();				/// A settings object storing variables between games.
+		highScore = getHighScore();					/// The high score on this device. Duh. 
 	} 
 
 	@Override
@@ -450,10 +458,20 @@ public class GameScreen extends Screen {
 	}
 	
 	private void drawRunningUI() {
-		Graphics g = game.getGraphics();
+		AndroidGraphics g = (AndroidGraphics) game.getGraphics();
 		g.clearScreen(0);
 		g.drawString("Score : " + score, gameWidth - 400, 50, paint2);
-		g.drawString("Lives : " + livesleft, 100, 50, paint2);
+		g.drawString("Lives : ", 80, 50, paint2);
+		// Try to draw a small ball at this spot instead.
+		
+		int smallBallSize = (int)(testBall.getSize()*livesIndFactor);
+		int livesXPos = 130; /// Should change this to be something variable to proportion probably.
+		int livesYPos = 50 - (3*smallBallSize/4) ;
+		for(int i = 0; i < livesleft ; i++){
+			g.drawScaledImage(Assets.ball, livesXPos, livesYPos , livesIndFactor);
+			livesXPos += smallBallSize  * 1.3;
+		}
+		
 		g.drawString("Highscore : " + highScore, gameWidth - 200, 50, paint2);
 
 		for (int i = 0; i < balls.size(); i++) {

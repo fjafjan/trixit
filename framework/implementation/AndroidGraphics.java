@@ -144,11 +144,14 @@ public class AndroidGraphics implements Graphics {
     // This is similar to the previous function only this one always
     // draws the complete image, which means you only need to specify 
     // the top left corner where the image will be drawn. 
+
     @Override
-    public void drawImage(Image Image, int x, int y) {
-        canvas.drawBitmap(((AndroidImage)Image).bitmap, x, y, null);
+    public void drawImage(Image image, int x, int y) {
+        canvas.drawBitmap(((AndroidImage)image).bitmap, x, y, null);
     }
 
+    
+    
     // This similarly to the previous function draws a portion of an image.
     // However this one also specifies a size of the resulting image
     // scaling the results with factors width/srcWidth, height/srcHeight. 
@@ -172,6 +175,15 @@ public class AndroidGraphics implements Graphics {
        
     }
    
+    public void drawScaledImage(Image image, int x, int y, double scale){
+        dstRect.left = x;
+        dstRect.top = y;
+        dstRect.right = x +  (int)(image.getWidth() * scale);
+        dstRect.bottom = y + (int)(image.getHeight() * scale);
+       
+        canvas.drawBitmap(((AndroidImage) image).bitmap, null , dstRect, null);
+    }
+    
     @Override
     public int getWidth() {
         return frameBuffer.getWidth();

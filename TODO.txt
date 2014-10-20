@@ -2,11 +2,9 @@ Known issues:
 
 0) Keep tweaking variables
 
+1) Change background
 
-1) Add a nicer number of lives indicator.
-	How to rescale image?
-
-2) Add grades based on score
+2) Change the icon. 
 
 3) Add tennis balls with bonuses
      Add a destroy variable that is checked at some point and use it.
@@ -21,8 +19,9 @@ Known issues:
 5) Cut the sounds so that they are more responsive
 
 6) Consider that a swipe could hit multiple bals. 
+
 Known bugs:
-    New dist and old dist return different answers? unclear as heck why.
+    Swiping doesn't swipe, only clicks multiple times. 
     
 
 WRITE A MARCOV PREDICTOR MIXER OF SOME BRAINDEAD POPSTAR AND MARX

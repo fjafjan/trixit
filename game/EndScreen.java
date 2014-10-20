@@ -20,7 +20,7 @@ public class EndScreen extends Screen{
 	Random random = new Random();
 	int gameWidth, gameHeight;
 	String grade, review;
-	
+	double timeAlive, waitTime;
 	
 	public EndScreen(Game game, int score) {
 		super(game);
@@ -30,6 +30,9 @@ public class EndScreen extends Screen{
 		
 		this.grade = getGrade(score);
 		this.review = getReview(grade);
+		
+		this.timeAlive = 0;      /// The time since this endScreen first appeared
+		this.waitTime = 100;    /// The minimum amount of time the user has to wait before starting a new game.
 		
 		paint = new Paint();
 		paint.setTextSize(30);
@@ -42,7 +45,9 @@ public class EndScreen extends Screen{
 	public void update(float deltaTime) {
 		
 		List<TouchEvent> touchEvents = game.getInput().getTouchEvents();
-
+		timeAlive += deltaTime;
+		if(timeAlive < waitTime)
+			return;
 		for (int i = 0; i < touchEvents.size(); i++) {
 			TouchEvent event = touchEvents.get(i);
 			if (event.type == TouchEvent.TOUCH_DOWN) {
@@ -99,23 +104,25 @@ public class EndScreen extends Screen{
     	if (grade == "F--"){
     		reviews.add("We're all very sorry");
     		reviews.add("Whelp");
-    		reviews.add("Now let's have a try from someone \n who's not a complete retard");
-    		reviews.add("Okay now you try!");
+    		reviews.add("Now let's have a try from someone \n who's not a complete [redacted]");
+    		reviews.add("Okay, now you try!");
     	}else if (grade == "F"){
 			reviews.add("Hopefully you're a good person");
 			reviews.add("Next time use your fingers");
 			reviews.add("Call 911");
 			reviews.add("Straight up very bad");
 			reviews.add("I hope this was your first try");
+			reviews.add("I will need to speak with \n your parent or guardian");
 			reviews.add("F stands for Failure");
     	}else if (grade == "E"){
     		reviews.add("Still very bad");
 			reviews.add("You have to do better \n  than that...");
-			reviews.add("I told you you would fail.");
+			reviews.add("I told you you would fail");
 			reviews.add("You are a shame \n  to your family");
 			reviews.add("This game may not be for you");
-			reviews.add("You suck");
-			reviews.add("E stands for Embarrasing");
+			reviews.add("You suck"); 
+			reviews.add("I hope no one saw that");
+			reviews.add("E stands for Embarrassing");
     	}else if (grade == "D"){
     		reviews.add("You are the very best \n  of failures!");
 			reviews.add("Impressive... for a monkey");
@@ -123,6 +130,7 @@ public class EndScreen extends Screen{
 			reviews.add("I hope you can do better");
 			reviews.add("You are not gifted");
 			reviews.add("Almost acceptable");
+			reviews.add("You should lie about this result");
 			reviews.add("D stands for Dumb");
     	}else if (grade == "C"){
     		reviews.add("You are mediocre!");
@@ -138,7 +146,7 @@ public class EndScreen extends Screen{
     		reviews.add("A decent performance!");
     		reviews.add("Maybe there is some potential \n in you after all");
     		reviews.add("Not an embarrasing result");
-    		reviews.add("You shouldn't really be proud \n about it");
+    		reviews.add("You shouldn't really be proud \n of it");
     		reviews.add("B stands for Barely good");
     	}else if (grade == "A"){
     		reviews.add("You got some moves");
