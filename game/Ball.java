@@ -42,11 +42,11 @@ public class Ball {
 	
 	/// TODO add the delta t here now we assume that the quadratic term is sufficiently small to ignore.
 	public void updateForce(Vector2d force){
-		vel.plus(force.multret(slowDown/this.weight));
+		vel.plus(force.multret(1/this.weight));
 	}
 
 	public void updateForce(double forceX, double forceY){
-		vel.plus(new Vector2d(forceX/weight, forceY/weight).multret(slowDown));
+		vel.plus(new Vector2d(forceX/weight, forceY/weight));
 	}
 	
 	public void update(double deltaTime){
@@ -106,12 +106,17 @@ public class Ball {
 		
 		
 		// Okay so we want to find out the time it took since they actually intersected one another.
+		// The relative positions of the two balls.
 		Vector2d posDiff = this.pos.diff(otherBall.getPos());
+		// The relative velocity of the two balls
 		Vector2d velDiff = this.vel.diff(otherBall.getVel());
-//		Log.w("Debuggin", "posDiff is  " + posDiff + " and vellDiff is " + velDiff);
+		// The distance at which these two balls should collide. 
+		double collideDist = (this.size + otherBall.size) /2;
+
+		//		Log.w("Debuggin", "posDiff is  " + posDiff + " and vellDiff is " + velDiff);
 		
 		// Finds the two times when the balls will be intersecting
-		double[] ts = findCollisionTime(posDiff, velDiff);
+		double[] ts = findCollisionTime(posDiff, velDiff, collideDist);
 		double t1 = ts[0];
 		double t2 = ts[1];
 		
@@ -176,14 +181,14 @@ public class Ball {
 		
 		// keep this as 1 atm. 
 		// otherBall.weight*2. / (this.weight + otherBall.weight);
-		double massFactor = 1 ;  
+		double massFactor = 2 * otherBall.weight/(this.weight + otherBall.weight) ;  
 		
 		double dist = posDiff.length() * posDiff.length();
 		
 		Vector2d newForce = posDiff.multret(massFactor * innerProd / dist); 
 		
 		vel.minus(newForce);
-		otherBall.updateForce(newForce.multret(weight));
+		otherBall.updateForce(newForce.multret(this.weight));
 	}
 	
 	
@@ -191,11 +196,11 @@ public class Ball {
 		return (vec1.dot(vec2) >= 0);
 	}
 	
-	private double[] findCollisionTime(Vector2d posDiff, Vector2d velDiff) {
+	private double[] findCollisionTime(Vector2d posDiff, Vector2d velDiff, double collideDistance) {
 		double term1 = 2 * posDiff.multPoint(velDiff).sum();
 
 		//  4 (k^2+l^2) (-D^2+x^2+y^2))
-		double term2 = 4 * velDiff.abs() * (posDiff.abs() - (size*size));
+		double term2 = 4 * velDiff.abs() * (posDiff.abs() - (collideDistance*collideDistance));
 		
 		// +2 k x+2 l y)
 		double term3 = 2 * (posDiff.multPoint(velDiff)).sum();
@@ -227,7 +232,7 @@ public class Ball {
 		force.y = -1;
 		force.normalize();
 		
-		vel = force.multret(forceConstant * slowDown / weight);
+		vel = force.multret(slowDown * forceConstant / weight);
 //		Log.w("Debuggin", "We touch the ball, the resulting force is " + force.x + " " + force.y);
 		return true;
 	}

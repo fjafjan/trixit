@@ -44,7 +44,7 @@ public class GameScreen extends Screen {
 	TennisBall tennisball;
 	double chanceOfMod, tennisSpeed, forceConstant, slowDown, gravity;
 	double touchRadius, livesIndFactor;
-	int gameHeight, gameWidth, startVel, highScore;
+	int gameHeight, gameWidth, startSpeed, highScore;
 	float volume;
 	
 	
@@ -55,14 +55,14 @@ public class GameScreen extends Screen {
 		
 		// Here we have various options that can be tweaked and adjusted. 
 		livesleft = 3;       	/// The number of bounces on the ground allowed. 
-		chanceOfMod = 0;      	/// Chance of spawning a tennisball that in the future will modify the game in some way. 
+		chanceOfMod = 0.01; 	/// Chance of spawning a tennis ball that in the future will modify the game in some way. 
 		forceConstant = 1.9;  	/// Linearly increases the force applied by a click. 
 		slowDown = 0.7;        	/// Linearly slows down the game. 
+		gravity = 0.28;        	/// The gravitational acceleration at every
+		startSpeed = 12;		/// The initial vertical speed of a new ball.
+		tennisSpeed = 15;     	/// The initial speed of a tennis ball. 
 		maxBalls = 3;         	/// The maximum number of balls. 
 		addBallScore = 5;    	/// At each increment of this score another ball is added.
-		gravity = 0.28;        	/// The gravitational acceleration at every
-		startVel = 12;			/// The initial vertical velicity of a new ball.
-		tennisSpeed = 10;     	/// The initial speed of a tennisball. 
 		touchRadius = 35;       /// The radius of a touch point for collision detection, aka finger thickness.
 		livesIndFactor = 0.4;	/// How much smaller the little balls indicating lives left are. 
 		
@@ -176,7 +176,9 @@ public class GameScreen extends Screen {
 							
 			for (int j = 0; j < events.size(); j++) {
 				int ballTouched = inBall(events.get(j).x, events.get(j).y, touchRadius);
-				if (ballTouched != -1){
+				if (ballTouched == -2){
+					tennisball.destroy = true;
+				}else if (ballTouched != -1){
 					// Make sure that this ball has not collided with this swipe before.
 					Log.w("Debuggin", "Get swope.");
 					// Tries to swipe the ball, will return false if too recent.
@@ -204,6 +206,7 @@ public class GameScreen extends Screen {
 		}
 		if(tennisball != null){
 			tennisball.update(deltaTime);
+			checkEdges(tennisball);
 			if(tennisball.destroy)
 				tennisball = null;
 		}
@@ -231,18 +234,18 @@ public class GameScreen extends Screen {
 	private void addBall(){
 		noFailScore = 0;
 		if (balls.isEmpty()){
-			balls.add(new Ball((int) gameWidth/2, (int) gameHeight/2, 0, -startVel));
+			balls.add(new Ball((int) gameWidth/2, (int) gameHeight/2, 0, -startSpeed));
 			return;
 		}
 		if (inBall((int) gameWidth/2, (int) gameHeight/2, balls.get(0).getSize()) == -1){
-			balls.add(new Ball((int) gameWidth/2, (int) gameHeight/2, 0, -startVel));
+			balls.add(new Ball((int) gameWidth/2, (int) gameHeight/2, 0, -startSpeed));
 			return;
 		}
 		for(int attempts = 0; attempts < 100 ; attempts++){
 			double testX = random.nextDouble() * gameWidth;
 			double testY = ((random.nextDouble()*0.5) - 0.5 ) * gameHeight;	
 			if (inBall((int)testX, (int) testY, balls.get(0).getSize()) == -1){
-				balls.add(new Ball(testX, testY, 0, -startVel));
+				balls.add(new Ball(testX, testY, 0, -startSpeed));
 				return;
 			}
 			
@@ -302,7 +305,11 @@ public class GameScreen extends Screen {
 			ball.bounceY(minPosY + overstep);
 		/// If the edge of the ball goes outside the floor
 		}else if(pos.y > maxPosY){
-			if(ball instanceof Ball){
+			if(ball instanceof TennisBall){
+				// Destroy the tennisball
+				tennisball.destroy = true;
+				Log.w("Debuggin", "We are destroying the tennisball at position" + tennisball.getPos());
+			}else if(ball instanceof Ball){
 				overstep = pos.y - maxPosY;
 				ball.bounceY(maxPosY - overstep);
 				balls.remove(ball);
@@ -315,9 +322,6 @@ public class GameScreen extends Screen {
 					checkHighScore();
 					state = GameState.GameOver;
 				}
-			}else if(ball instanceof TennisBall){
-				// Destroy the tennis ball
-				tennisball = null;
 			}else{
 				Log.w("Debuggin", "Somehow the ball is neither orignal or a tennisball. Weird stuff");
 			}
@@ -341,11 +345,12 @@ public class GameScreen extends Screen {
 		// We touched the tennisball
 		if (ballTouched == -2){
 			// Play a special tennisball sound I think. 
-			Vector2d eventPos = new Vector2d(event.x, event.y);
-			Vector2d ballPos = tennisball.getPos();
-			Vector2d force = ballPos.diff(eventPos);
-			force.normalize();
-			tennisball.updateForce(force.multret(forceConstant)); 
+//			Vector2d eventPos = new Vector2d(event.x, event.y);
+//			Vector2d ballPos = tennisball.getPos();
+//			Vector2d force = ballPos.diff(eventPos);
+//			force.normalize();
+//			
+//			tennisball.updateForce(force.multret(forceConstant)); 
 			tennisball.destroy = true;
 			return;
 		}
@@ -359,7 +364,7 @@ public class GameScreen extends Screen {
 
 			score += 1;
 			noFailScore += 1;
-			if (random.nextDouble() < chanceOfMod){
+			if (tennisball == null && random.nextDouble() < chanceOfMod){
 				addTennisBall();
 			}
 		}
@@ -373,23 +378,31 @@ public class GameScreen extends Screen {
 		// I should replace ball with "spheroid g object" for the sake of everyone involved.
 		// Check for all balls if this coordinate is .. within that.
 		Vector2d pos = new Vector2d(x, y);
+
+		
+		// We check if there is a colission with the tennisball
+		if(tennisball != null){
+			double ballSize = tennisball.getSize();
+			Vector2d ballPos = tennisball.getPos();
+			Log.w("Debuggin", "We are checking for collision with the tennisball");
+			Log.w("Debuggin", "The distance from this ball was " + pos.diff(ballPos).length());
+			Log.w("Debuggin", "The tennisball is at pos " + ballPos);
+			if ( pos.diff(ballPos).length()  < ((ballSize/2)  + radius)){
+				Log.w("Debuggin", "Something was inside a tennisball that I am pretty sure is null");
+				Log.w("Debuggin", "Tennisball is at " + tennisball.getPos());
+				return -2;
+			}
+		}
+
+		/// If not, then we check if there a collision with any of the other balls. 
 		for (int i = 0; i < balls.size(); i++) {
 			double ballSize = balls.get(i).getSize();
 			Vector2d ballPos = balls.get(i).getPos();
 			if ( pos.diff(ballPos).length()  < ((ballSize/2)  + radius)){
 //  			double firstDiff = pos.diff(ballPos).length();
 //				double otherDiff = ballPos.diff(pos).length();
-//				Log.w("Debuggin", "firstDiff is " + firstDiff + ", otherDIff is " + otherDiff);
+				Log.w("Debuggin", "we find a collision with ball " + i);
 				return i;
-			}
-		}
-		if(tennisball != null){
-			double ballSize = tennisball.getSize();
-			Vector2d ballPos = tennisball.getPos();
-			if ( pos.diff(ballPos).length()  < (ballSize  + radius)){
-				Log.w("Debuggin", "Something was inside a tennisball that I am pretty sure is null");
-				Log.w("Debuggin", "Tennisball is at " + tennisball.getPos());
-				return -2;
 			}
 		}
 		return -1;

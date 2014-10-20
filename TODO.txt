@@ -2,18 +2,37 @@ Known issues:
 
 0) Keep tweaking variables
 
+
+1) Add tennis balls with bonuses
+     Add some custom modes.
+	No gravity mode
+     	Slow speed mode
+     	Wacky movement mode (quantum balls?)
+	Double scoring
+	Double speed
+	Add life
+	Inverse gravity mode
+	ball attraction mode
+	ball reppellation mode
+
+2) Make the touch radius a property of the ball instead of the click
+   so that regular balls can have a larger touch radius and the tennisballs
+   can have a smaller one, making them harderrrr.
+
+     etc etc
+2) The "inball" function in nice, but I think for the purposes
+   of collisions, it's nicer to have a special checkCollisions
+   function that first off doesn't do the extra work of checking
+   for everything twice, and moreover it doesn't require the 
+   rather ugly method of returning collision with self most of 
+   the time. I don't think it is sufficiently advanced to justify
+   such ugliness. Perhaps isntead one could write shorter functions
+   that do some of the "trickier" parts of its job. 
+	
+2) Add server communication to check "global" high scores. 
+
 1) Change background
 
-2) Change the icon. 
-
-3) Add tennis balls with bonuses
-     Add a destroy variable that is checked at some point and use it.
-     Add drawing and colission with TennisBall
-     No gravity mode
-     Slow speed mode
-     Wacky movement mode?
-     etc etc
-	
 4) Print FPS
 
 5) Cut the sounds so that they are more responsive
