@@ -14,13 +14,16 @@ Known issues:
 	Inverse gravity mode
 	ball attraction mode
 	ball reppellation mode
+    	etc etc
 
-2) Make the touch radius a property of the ball instead of the click
+
+3) Make the touch radius a property of the ball instead of the click
    so that regular balls can have a larger touch radius and the tennisballs
    can have a smaller one, making them harderrrr.
 
-     etc etc
-2) The "inball" function in nice, but I think for the purposes
+
+
+4) The "inball" function in nice, but I think for the purposes
    of collisions, it's nicer to have a special checkCollisions
    function that first off doesn't do the extra work of checking
    for everything twice, and moreover it doesn't require the 
@@ -37,8 +40,6 @@ Known issues:
 
 5) Cut the sounds so that they are more responsive
 
-6) Consider that a swipe could hit multiple bals. 
-
 Known bugs:
     Swiping doesn't swipe, only clicks multiple times. 
     
@@ -46,8 +47,6 @@ Known bugs:
 WRITE A MARCOV PREDICTOR MIXER OF SOME BRAINDEAD POPSTAR AND MARX
 Fix UI in general
 
-
-Change ballSize, gravity etc to be synced between classes, currently it's baed.
 
 Add spin
 

@@ -16,6 +16,7 @@ public class Ball {
 	private static double gravity = 0.2;
 	private static double minTouchTime = 25;
 	
+	
 	public double size, bounceCoef, weight;
 	public Ball(double xPos,double yPos, double xVel, double yVel){
 		this.pos = new Vector2d(xPos, yPos);
@@ -26,9 +27,11 @@ public class Ball {
 		unTouchedTime = 800;
 	}
 	
+	
 	public Ball(Vector2d pos, Vector2d vel){
 		this(pos.x, pos.y, vel.x, vel.y);
 	}
+
 	
 	public double getX(){
 		return pos.x;
@@ -94,6 +97,10 @@ public class Ball {
 	
 	public void setGravity(double g){
 		gravity = g;
+	}
+	
+	public void setMinTouchTime(int t){
+		minTouchTime = t;
 	}
 	
 	/// Collides this ball with another ball and performs the required velocity changes on both balls.

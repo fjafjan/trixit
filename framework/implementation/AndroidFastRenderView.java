@@ -37,7 +37,7 @@ public class AndroidFastRenderView extends SurfaceView implements Runnable{
 				continue;
 			}
 			
-			float deltaTime = (System.nanoTime() - startTime) / 10000000.000f;
+			float deltaTime = (System.nanoTime() - startTime) / 1000000.000f;
 			startTime = System.nanoTime();
 			
 			// If it's too slow then .. we set it to something? 

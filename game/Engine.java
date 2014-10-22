@@ -1,34 +1,24 @@
 package com.trixit.game;
 
-
-
-
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.graphics.Paint;
-import android.graphics.Color;
 import android.media.AudioManager;
 import android.util.Log;
 
-import com.trixit.framework.Screen;
-import com.trixit.framework.Game;
-import com.trixit.framework.Graphics;
-import com.trixit.framework.Input.TouchEvent;
 import com.trixit.framework.Sound;
 import com.trixit.framework.Vector2d;
-import com.trixit.framework.implementation.AndroidGraphics;
-import com.trixit.game.Ball;
-import com.trixit.game.TennisBall;
+import com.trixit.framework.Input.TouchEvent;
+import com.trixit.game.GameScreen.GameState;
 
 
-public class GameScreen extends Screen {
-	enum GameState{
-		Ready, Running, Paused, GameOver
-	}
+/// This class handles all the game logic of balls, collisions and touches. 
+public class Engine {
+	double id;
 	Random random = new Random();
 	GameState state = GameState.Ready;
 	SharedPreferences settings;
@@ -46,13 +36,9 @@ public class GameScreen extends Screen {
 	double touchRadius, livesIndFactor;
 	int gameHeight, gameWidth, startSpeed, highScore;
 	float volume;
-	
-	
-	
-	public GameScreen(Game game){
-		super(game);
-		
-		
+
+	public Engine(double d){
+		id = d;
 		// Here we have various options that can be tweaked and adjusted. 
 		livesleft = 3;       	/// The number of bounces on the ground allowed. 
 		chanceOfMod = 0.0;		/// Chance of spawning a tennis ball that in the future will modify the game in some way. 
@@ -67,8 +53,8 @@ public class GameScreen extends Screen {
 		livesIndFactor = 0.4;	/// How much smaller the little balls indicating lives left are. 
 		
 		// Initialize game object here
-		gameHeight = game.getGraphics().getHeight();/// Yeah yeah. The height of the game.
-		gameWidth =game.getGraphics().getWidth();	/// The diagonal of the square... no it's just the width.
+		gameHeight = 1000;							/// Yeah yeah. The height of the game.
+		gameWidth = 2000;	/// The diagonal of the square... no it's just the width.
 		score = 0;									/// The score. Duh. 
 		noFailScore = 0;							/// The number of points without dropping a ball
 		balls = new ArrayList<Ball>();				/// The list of all balls in use.
@@ -81,89 +67,14 @@ public class GameScreen extends Screen {
 		volume = AudioManager.STREAM_MUSIC;			/// We set the volume of the game to be the 
 													/// current music volume
 		
-		paint = new Paint();						/// We create two separate paints, I think this is bad.
-		paint.setTextSize(30);
-		paint.setTextAlign(Paint.Align.CENTER);
-		paint.setAntiAlias(true);
-		
-		paint2 = new Paint();
-		paint2.setTextSize(30);
-		paint2.setTextAlign(Paint.Align.CENTER);
-		paint2.setAntiAlias(true);
-		paint2.setColor(Color.WHITE);
-
-		settings = game.getSettings();				/// A settings object storing variables between games.
-		highScore = getHighScore();					/// The high score on this device. Duh. 
-		
-		Engine engine = new Engine(4.5);
-	} 
-
-	@Override
-	public void update(float deltaTime) {
-		List<TouchEvent> touchEvents = game.getInput().getTouchEvents();
-
-		// I think there should only be two states, either running or game over. No 
-		// menues and shit, smooth user experience!
-		if (state == GameState.Ready)
-			updateReady(touchEvents);
-		if (state == GameState.Running)
-			updateRunning(touchEvents, deltaTime);
-		//if (state == GameState.GameOver)
-			//updateGameOver(touchEvents);
-	}
-
-	// Simply lets the user touch the screen to start the game. 
-	private void updateReady(List<TouchEvent> touchEvents) {
-		paint2.setTextSize(30);
-		if (touchEvents.size() > 0){
-			Log.w("Debuggin", "Game is now running");
-			state = GameState.Running;
-		}
-		
-	}
-
-	private void updateRunning(List<TouchEvent> touchEvents, double deltaTime) {
-		int len =  touchEvents.size();
-		
+		/// EMPORARY
 		if( noFailScore > (addBallScore*balls.size()) ){
 			if(balls.size() < maxBalls)
 				addBall();
 		}
 
-		
-		ArrayList<DragEvent> dragEvents = new ArrayList<DragEvent>();
-		// Change this to be a class member instead of function variable.  
-		for (int i = 0; i < len; i++) {
-			TouchEvent event = touchEvents.get(i);
-			if (event.type == TouchEvent.TOUCH_DOWN){
-				tryTouch(event);
-			}else if(event.type == TouchEvent.TOUCH_DRAGGED){
-				if(dragEvents.isEmpty()){
-					dragEvents.add(new DragEvent(event));
-				}else{
-					boolean assigned = false;
-					for (int j = 0; j < dragEvents.size(); j++) {
-						if(dragEvents.get(j).id == event.pointer){
-							dragEvents.get(j).addEvent(event);
-							assigned = true;
-						}
-					}
-					/// If there was no other drag event associated with
-					if(!assigned){
-						dragEvents.add(new DragEvent(event));
-					}
-				}
-					// Hopefully all the drag events from one finger appear at least in sequence. 
-					
-//					Log.w("Debuggin", "We have another touch event of type " + event.type);
-					//Log.w("Debuggin", "For reference UP = " + TouchEvent.TOUCH_UP  + " dragged = " + TouchEvent.TOUCH_DRAGGED);			
-			}
-		}		
-		// We have checked all our touch events.
-		collideDragEvents(dragEvents, deltaTime);
-		// Moves all balls forward in time and checks for collisions.
-		updateBalls(deltaTime);
 	}
+	
 
 	private void collideDragEvents(ArrayList<DragEvent> dragEvents, double deltaTime) {
 		// If we have multiple dragEvents we check each
@@ -218,10 +129,7 @@ public class GameScreen extends Screen {
 			Vector2d pos = balls.get(i).getPos();
 			// We check for collisions
 			
-			// THE FACT THAT WE DON'T UPDATE ALL BALLS FIRST AND CHECK FOR COLISSIONS AFTERWARDS
-			// IS ALMOST CERTAINLY WHY I STILL HAVE SOME WEIRD COLISSION PATTERNS!!
 			int collidedWith = inBall(pos, balls.get(i).getSize()/2.);
-//			Log.w("Debuggin", "We test collision of " + i + " and " + collidedWith);
 			if( collidedWith != -1 && collidedWith != i){
 				if(collidedWith == -2){
 					Log.w("Debuggin", "We are colliding tennisball");
@@ -235,29 +143,35 @@ public class GameScreen extends Screen {
 		}
 	}
 	
+	/// Creates a new ball, it attempts first to create it at the center of the playing field
+	/// but if that is occupied, it will use another random position in the upper half of 
+	/// the playing field, with no horizontal speed and a fixed upward vertical velocity. 
 	private void addBall(){
 		noFailScore = 0;
-		if (balls.isEmpty()){
+		double ballSize = tennisball.getSize();
+		
+		/// If there are no balls, or if the space we want to spawn a ball is empty.
+		/// Note that we could actually use half the ballSize here, but making sure that 
+		/// the new ball doens't immediately collide with an existing ball seems like a nice 
+		/// idea. 
+		if (balls.isEmpty() || inBall(gameWidth/2, gameHeight/2, ballSize) == -1){
 			balls.add(new Ball((int) gameWidth/2, (int) gameHeight/2, 0, -startSpeed));
 			return;
 		}
-		if (inBall((int) gameWidth/2, (int) gameHeight/2, balls.get(0).getSize()) == -1){
-			balls.add(new Ball((int) gameWidth/2, (int) gameHeight/2, 0, -startSpeed));
-			return;
-		}
+		/// There is a ball "blocking" the default spawn.
 		for(int attempts = 0; attempts < 100 ; attempts++){
 			double testX = random.nextDouble() * gameWidth;
 			double testY = ((random.nextDouble()*0.5) - 0.5 ) * gameHeight;	
-			if (inBall((int)testX, (int) testY, balls.get(0).getSize()) == -1){
+			if (inBall(testX, testY, ballSize) == -1){
 				balls.add(new Ball(testX, testY, 0, -startSpeed));
 				return;
-			}
-			
+			}			
 		}
 	}
-
-	// This is virtually identical to the above code, pretty sure I can do better
-	// than this...
+	
+	/// Creates a new "tennisball" at a random position in the upper half
+	/// of the playing field, with a truly random direction but a fixed 
+	/// initial speed, tennisSpeed. 
 	private void addTennisBall(){
 		tennisball = new TennisBall(0,0,0,0);
 		double ballSize = tennisball.getSize();
@@ -291,7 +205,7 @@ public class GameScreen extends Screen {
 		double maxPosX = gameWidth - (ballSize/2);
 		double maxPosY = gameHeight - (ballSize/2);
 		
-		// overstep represent the amount the ball has went outside the
+		// over step represent the amount the ball has went outside the
 		double overstep = 0;
 		// game area.
 		if(pos.x < minPosX){
@@ -349,7 +263,7 @@ public class GameScreen extends Screen {
 		// We touched the tennisball
 		if (ballTouched == -2){
 			// Play a special tennisball sound I think. 
-			double x = startCustomMode(); // think of  abetter name for this and actually do something with it. 
+			//double x = startCustomMode(); // think of  abetter name for this and actually do something with it. 
 			tennisball.destroy = true;
 			return;
 		}
@@ -410,46 +324,6 @@ public class GameScreen extends Screen {
 	public int inBall(Vector2d pos, double radius){
 		return inBall(pos.x, pos.y, radius);
 	}
-	
-	private void playSound(Sound[] sounds){
-		int length = sounds.length;
-		int pick = random.nextInt(length);
-		sounds[pick].play(volume);
-	}
-	
-	private double startCustomMode(){
-		return 0;
-	}
-	
-	
-
-	@Override
-	public void paint(float deltaTime) {
-		switch (state) {
-		case Ready: 
-			drawReadyUI();
-			break;
-		case Running:
-			drawRunningUI();
-			break;
-		case GameOver:
-			drawGameOverUI();
-			break;
-		default:
-			break;
-		}
-	}
-
-	private void nullify() {
-		paint = null;
-		System.gc();
-	}
-
-	private void drawReadyUI() {
-		Graphics g = game.getGraphics();
-
-		g.drawString("Click to begin", gameWidth/2, gameHeight/2, paint);
-	}
 
 	private int getHighScore(){		
 		if(settings.contains("highScore")){
@@ -470,64 +344,11 @@ public class GameScreen extends Screen {
 			edit.commit();
 		}
 	}
+
+	private void playSound(Sound[] sounds){
+		int length = sounds.length;
+		int pick = random.nextInt(length);
+		sounds[pick].play(volume);
+	}
 	
-	private void drawRunningUI() {
-		AndroidGraphics g = (AndroidGraphics) game.getGraphics();
-		g.clearScreen(0);
-		g.drawString("Score : " + score, gameWidth - 400, 50, paint2);
-		g.drawString("Lives : ", 80, 50, paint2);
-		// Try to draw a small ball at this spot instead.
-		
-		int smallBallSize = (int)(testBall.getSize()*livesIndFactor);
-		int livesXPos = 130; /// Should change this to be something variable to proportion probably.
-		int livesYPos = 50 - (3*smallBallSize/4) ;
-		for(int i = 0; i < livesleft ; i++){
-			g.drawScaledImage(Assets.ball, livesXPos, livesYPos , livesIndFactor);
-			livesXPos += smallBallSize  * 1.3;
-		}
-		
-		g.drawString("Highscore : " + highScore, gameWidth - 200, 50, paint2);
-
-		for (int i = 0; i < balls.size(); i++) {
-			double ballSize = balls.get(0).getSize();		
-			int ballX = (int) (balls.get(i).getX() - (ballSize/2));
-			int ballY = (int) (balls.get(i).getY() - (ballSize/2));
-			g.drawImage(Assets.ball, ballX, ballY);	
-		}
-		if(tennisball != null){
-			double ballSize = tennisball.getSize();
-			int ballX = (int) (tennisball.getX() - (ballSize/2));
-			int ballY = (int) (tennisball.getY() - (ballSize/2));
-			g.drawImage(Assets.tennisball, ballX, ballY);
-		}
-	}
-
-	
-    private void drawGameOverUI() {
-    	game.setScreen(new EndScreen(game, score));
-    }
-
-	@Override
-	public void pause() {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void resume() {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void dispose() {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void backButton() {
-		nullify();
-	}
-
 }
