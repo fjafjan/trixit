@@ -26,7 +26,7 @@ public class Engine {
 	/// Variables that are set once and should not change during a game
 	int gameHeight, gameWidth, maxBalls, addBallScore, noFailScore;
 	double chanceOfMod, tennisSpeed, forceConstant, slowDown, gravity;
-	double startSpeed, touchRadius;
+	double startSpeed, startSpin, touchRadius;
 	
 	float volume;
 
@@ -34,10 +34,11 @@ public class Engine {
 		// Here we have various options that can be tweaked and adjusted. 
 		livesleft = 3;       	/// The number of bounces on the ground allowed. 
 		chanceOfMod = 0.0;		/// Chance of spawning a tennis ball that in the future will modify the game in some way. 
-		forceConstant = 1.9;	/// Linearly increases the force applied by a click. 
-		slowDown = 0.9;		/// Linearly slows down the game. 
+		forceConstant = 2.4;	/// Linearly increases the force applied by a click. 
+		slowDown = 0.60;   		/// Linearly slows down the game. 
 		gravity = 0.28;        	/// The gravitational acceleration at every
 		startSpeed = 12;		/// The initial vertical speed of a new ball.
+		startSpin = 5;			/// The maximum initial spin of a new ball.
 		tennisSpeed = 15;     	/// The initial speed of a tennis ball. 
 		maxBalls = 3;         	/// The maximum number of balls. 
 		addBallScore = 5;    	/// At each increment of this score another ball is added.
@@ -143,13 +144,13 @@ public class Engine {
 	private void addBall(){
 		noFailScore = 0;
 		double ballSize = new Ball(0,0,0,0).getSize();
-		
+		double initialSpin = 2 * (random.nextDouble() - 0.5) * startSpin;
 		/// If there are no balls, or if the space we want to spawn a ball is empty.
 		/// Note that we could actually use half the ballSize here, but making sure that 
 		/// the new ball doens't immediately collide with an existing ball seems like a nice 
 		/// idea. 
 		if (balls.isEmpty() || inBall(gameWidth/2, gameHeight/2, ballSize) == -1){
-			balls.add(new Ball((int) gameWidth/2, (int) gameHeight/2, 0, -startSpeed));
+			balls.add(new Ball(gameWidth/2, gameHeight/2, 0, -startSpeed, initialSpin));
 			return;
 		}
 		/// There is a ball "blocking" the default spawn.
@@ -157,9 +158,9 @@ public class Engine {
 			double testX = random.nextDouble() * gameWidth;
 			double testY = ((random.nextDouble()*0.5) - 0.5 ) * gameHeight;	
 			if (inBall(testX, testY, ballSize) == -1){
-				balls.add(new Ball(testX, testY, 0, -startSpeed));
+				balls.add(new Ball(testX, testY, 0, -startSpeed, initialSpin));
 				return;
-			}			
+			}
 		}
 	}
 	
@@ -167,19 +168,23 @@ public class Engine {
 	/// of the playing field, with a truly random direction but a fixed 
 	/// initial speed, tennisSpeed. 
 	private void addTennisBall(){
-		tennisball = new TennisBall(0,0,0,0);
-		double ballSize = tennisball.getSize();
+		double ballSize = new TennisBall(0,0,0,0).getSize();
+		double initialSpin = 2 * (random.nextDouble() - 0.5) * startSpin;
+		
 		for(int attempts = 0; attempts < 100 ; attempts++){
-			double testX = random.nextDouble() * gameWidth;
-			// We make sure that the ball is spawned in the upper half of the playing field. 
-			double testY = ((random.nextDouble()*0.5) - 0.5 ) * gameHeight;			
+			
+			// We make sure that the ball is spawned in the upper half of the playing field.
+			double testX = random.nextDouble() * gameWidth; 
+			double testY = ((random.nextDouble()*0.5) - 0.5 ) * gameHeight;
+			
 			if (inBall((int)testX, (int) testY, ballSize) == -1){
-				tennisball.setPos(new Vector2d(testX, testY));
 				// To actually get a random angle distribution we should sample the angle
-				double VelAngle = random.nextDouble()*2*3.1415926535;
-				double VelX = Math.sin(VelAngle) * tennisSpeed;
-				double VelY = Math.cos(VelAngle) * tennisSpeed;
-				tennisball.setVel(new Vector2d(VelX, VelY));
+				double velAngle = random.nextDouble()*2*3.1415926535;
+				double velX = Math.sin(velAngle) * tennisSpeed;
+				double velY = Math.cos(velAngle) * tennisSpeed;
+				
+				tennisball = new TennisBall(testX,testY,velX,velY, initialSpin);
+				
 				return;
 			}
 		}

@@ -19,7 +19,7 @@ public class Ball {
 	
 	
 	public double size, bounceCoef, weight, friction, clickSpin;
-	public Ball(double xPos,double yPos, double xVel, double yVel){
+	public Ball(double xPos,double yPos, double xVel, double yVel, double spin){
 		this.pos = new Vector2d(xPos, yPos);
 		this.vel = new Vector2d(xVel, yVel);
 		size = 100; // I don't really make sure that this matches the size of the image right?
@@ -38,6 +38,10 @@ public class Ball {
 		this(pos.x, pos.y, vel.x, vel.y);
 	}
 
+	public Ball(double xPos, double yPos, double xVel, double yVel){
+		this(xPos, yPos, xVel, yVel, 0);
+	}
+	
 	
 	public double getX(){
 		return pos.x;

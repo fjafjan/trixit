@@ -203,23 +203,27 @@ public class GameScreen extends Screen {
 		}
 		
 		g.drawString("Highscore : " + highScore, gameWidth - 200, 50, paint2);
-
+		
+		/// We draw all the regular balls.
 		ArrayList<Ball> balls = (ArrayList<Ball>) engine.balls;
 		for (int i = 0; i < balls.size(); i++) {
 			double ballSize = balls.get(0).getSize();		
 			int ballX = (int) (balls.get(i).getX() - (ballSize/2));
 			int ballY = (int) (balls.get(i).getY() - (ballSize/2));
 			double angle = balls.get(i).getAngle();
-			//g.drawImage(Assets.ball, ballX, ballY);
 			g.drawRotatedScaledImage(Assets.ball, ballX, ballY, 1, angle);
 		}
+		
+		/// We draw the tennisball (atm only one). 
 		TennisBall tennisball = engine.tennisball;
 		if(tennisball != null){
 			double ballSize = tennisball.getSize();
 			int ballX = (int) (tennisball.getX() - (ballSize/2));
 			int ballY = (int) (tennisball.getY() - (ballSize/2));
-			g.drawImage(Assets.tennisball, ballX, ballY);
-		}
+			double angle = tennisball.getAngle();
+			///g.drawImage(Assets.tennisball, ballX, ballY);
+			g.drawRotatedScaledImage(Assets.tennisball, ballX, ballY, 1, angle);
+			}
 	}
 
 	

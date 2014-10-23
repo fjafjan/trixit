@@ -5,7 +5,7 @@ Known issues:
 Today
 1) Add rotation
 	Theory: For the simple case of a ball colliding with a wall
-	we should have this: 
+	we should have this: 	
 	Angular momentum += torque * time
 	torque = Force * radius
 	Force = relative velocity * friction.	
@@ -17,7 +17,6 @@ Today
 	with a generalized friction constant. 
 	relative velocity is in this case the perpendicular velocity 
 	component plus  spin * radius. 
-	Add rotated drawing of TennisBall
 	Add rotation adding in collisions between balls
 		So angular momentum should be conserved
 		which means we only need to estimate the 
