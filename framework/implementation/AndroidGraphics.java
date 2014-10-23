@@ -9,9 +9,11 @@ import android.graphics.Bitmap.Config;
 import android.graphics.BitmapFactory;
 import android.graphics.BitmapFactory.Options;
 import android.graphics.Canvas;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Paint.Style;
 import android.graphics.Rect;
+import android.util.Log;
 
 import com.trixit.framework.Graphics;
 import com.trixit.framework.Image;
@@ -175,6 +177,7 @@ public class AndroidGraphics implements Graphics {
        
     }
    
+    /// Draws the image at position x, y scaled linearly with 'scale'.
     public void drawScaledImage(Image image, int x, int y, double scale){
         dstRect.left = x;
         dstRect.top = y;
@@ -183,6 +186,26 @@ public class AndroidGraphics implements Graphics {
        
         canvas.drawBitmap(((AndroidImage) image).bitmap, null , dstRect, null);
     }
+    
+    ///Draws the image at position x, y, scaled linearly and rotated a fixed angle. 
+    public void drawRotatedScaledImage(Image image, int x, int y, double scale, double angle){
+    	dstRect.left = x;
+        dstRect.top = y;
+        dstRect.right = x +  (int)(image.getWidth() * scale);
+        dstRect.bottom = y + (int)(image.getHeight() * scale);
+        float imageCenterX = (float)(x + (image.getWidth() * scale * 0.5));
+        float imageCenterY = (float)(y + (image.getHeight() * scale * 0.5));
+//        Log.w("Debuggin", "imageCenter is " + imageCenterX + " , " + imageCenterY);
+//        Log.w("Debuggin", "normal xy are  " + (x+50) + " , " + (y+50));
+        Log.w("Debuggin", "Angle is " + angle);
+
+        canvas.save(Canvas.MATRIX_SAVE_FLAG);
+        canvas.rotate((float) angle, imageCenterX, imageCenterY);
+        canvas.drawBitmap(((AndroidImage) image).bitmap, x, y,null);
+        canvas.restore();
+    	//canvas.drawBitmap(((AndroidImage) image).bitmap, null , dstRect, null);
+    }
+    
     
     @Override
     public int getWidth() {

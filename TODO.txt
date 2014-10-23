@@ -2,9 +2,40 @@ Known issues:
 
 0) Keep tweaking variables
 
+Today
+1) Add rotation
+	Theory: For the simple case of a ball colliding with a wall
+	we should have this: 
+	Angular momentum += torque * time
+	torque = Force * radius
+	Force = relative velocity * friction.	
+	and since
+	I = 2 m r^2
+	Angular momentum = I * w => 
+	w += torque * time / moment of inertia =>
+	w += relative velocity * friction * time / radius * mas
+	with a generalized friction constant. 
+	relative velocity is in this case the perpendicular velocity 
+	component plus  spin * radius. 
+	Add rotated drawing of TennisBall
+	Add rotation adding in collisions between balls
+		So angular momentum should be conserved
+		which means we only need to estimate the 
+		interaction term
+	Add rotation adding in collisions to the roof
+	Add a small random rotation at the start
+	Add rotation adding to dragging
 
-1) Add tennis balls with bonuses
-     Add some custom modes.
+2) Change background
+
+Tomorrow
+3) Add server communication to check "global" high scores. 
+
+3) Make the touch radius a property of the ball instead of the click
+   so that regular balls can have a larger touch radius and the tennisballs
+   can have a smaller one, making them harderrrr.
+
+1) Add some custom modes to the tennis balls.
 	No gravity mode
      	Slow speed mode
      	Wacky movement mode (quantum balls?)
@@ -14,41 +45,22 @@ Known issues:
 	Inverse gravity mode
 	ball attraction mode
 	ball reppellation mode
+	Flubber mode
     	etc etc
 
-
-3) Make the touch radius a property of the ball instead of the click
-   so that regular balls can have a larger touch radius and the tennisballs
-   can have a smaller one, making them harderrrr.
-
-
-
-4) The "inball" function in nice, but I think for the purposes
-   of collisions, it's nicer to have a special checkCollisions
-   function that first off doesn't do the extra work of checking
-   for everything twice, and moreover it doesn't require the 
-   rather ugly method of returning collision with self most of 
-   the time. I don't think it is sufficiently advanced to justify
-   such ugliness. Perhaps isntead one could write shorter functions
-   that do some of the "trickier" parts of its job. 
-	
-2) Add server communication to check "global" high scores. 
-
-1) Change background
 
 4) Print FPS
 
 5) Cut the sounds so that they are more responsive
-
+	
 Known bugs:
     Swiping doesn't swipe, only clicks multiple times. 
-    
+	On Glazes phone, holding does not detect as a held touch.     
 
 WRITE A MARCOV PREDICTOR MIXER OF SOME BRAINDEAD POPSTAR AND MARX
 Fix UI in general
 
 
-Add spin
 
 Most likely the laggy behaviour is due to poor performance of the 
 emulator. The likely solution is to use a real android phone, but

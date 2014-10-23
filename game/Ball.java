@@ -10,6 +10,7 @@ import com.trixit.framework.Vector2d;
 public class Ball {
 	private Vector2d pos;
 	private Vector2d vel;
+	private double angle, spin, maxSpin;
 	private int unTouchedTime;
 	
 	private static double slowDown = 1;
@@ -17,7 +18,7 @@ public class Ball {
 	private static double minTouchTime = 25;
 	
 	
-	public double size, bounceCoef, weight;
+	public double size, bounceCoef, weight, friction, clickSpin;
 	public Ball(double xPos,double yPos, double xVel, double yVel){
 		this.pos = new Vector2d(xPos, yPos);
 		this.vel = new Vector2d(xVel, yVel);
@@ -25,6 +26,11 @@ public class Ball {
 		bounceCoef = 0.7;
 		weight = 1./10.;
 		unTouchedTime = 800;
+		angle = 0;
+		spin = 0;
+		maxSpin = 40;
+		friction = 1.2; // This should probably be static
+		clickSpin = 15;
 	}
 	
 	
@@ -55,13 +61,19 @@ public class Ball {
 	public void update(double deltaTime){
 		pos.plus( (vel.multret(deltaTime * slowDown)) );
 		vel.y += gravity * deltaTime * slowDown;
+		this.angle += spin;
 		unTouchedTime += deltaTime;
-//		Log.w("Debuggin", "unTouchedTime for this update is " + unTouchedTime);
 	}
 	
-	public void bounceX(double xPos){
+	public void bounceX(double xPos, int side){
 		this.pos.x = xPos;
 		this.vel.x *= -bounceCoef;
+		double relativeVelocity = vel.y + (side * spin); // The relative velocity of the edge of the ball. 
+		double spinFactor = side * ( relativeVelocity * friction );
+//		Log.w("Debuggin", "spinFactor is " + spinFactor);
+//		Log.w("Debuggin", "relativeVelocity is " + relativeVelocity);
+//		Log.w("Debuggin", "spin is " + spin);
+		this.spin -= spinFactor;
 	}
 	
 	public void bounceY(double yPos){
@@ -77,6 +89,10 @@ public class Ball {
 
 	public Vector2d getVel(){
 		return new Vector2d(vel);
+	}
+	
+	public double getAngle(){
+		return angle;
 	}
 	
 	public double getSize(){
@@ -105,11 +121,10 @@ public class Ball {
 	
 	/// Collides this ball with another ball and performs the required velocity changes on both balls.
 	public void collide(Ball otherBall){
+		if(otherBall == null) // If the other ball doens't exist, nothing happens.
+			return;
+//		Log.w("Debuggin", "otherBall is at " + otherBall.pos);
 		// Temporary debugging
-		Vector2d posPre1 = new Vector2d(this.pos);
-		Vector2d posPre2 = otherBall.getPos();
-		Vector2d posPost1;
-		Vector2d posPost2;
 		
 		
 		// Okay so we want to find out the time it took since they actually intersected one another.
@@ -125,7 +140,7 @@ public class Ball {
 		// Finds the two times when the balls will be intersecting
 		double[] ts = findCollisionTime(posDiff, velDiff, collideDist);
 		double t1 = ts[0];
-		double t2 = ts[1];
+//		double t2 = ts[1];
 		
 //		Log.w("Debuggin", "t1 is " + t1 + " t2 is " + t2);
  
@@ -154,26 +169,13 @@ public class Ball {
 			otherBall.getVel().print();			
 			throw new RuntimeException();
 		}
-		// Debugging temporary stuff
-		posPost1 = new Vector2d(this.pos);
-		posPost2 = otherBall.getPos();
-		
-		// Debugging code for colission probelms. 
-//		double moveDist1 = posPost1.diff(posPre1).length();
-//		double moveDist2 = posPost2.diff(posPre2).length();
-//		Log.w("Debuggin", "/n /n Posdiff is " + posDiff);
-//		Log.w("Debuggin", "The balls were moved " + moveDist1 + " and " + moveDist2);
-//		Log.w("Debuggin", "Our positions before were " + posPre1 + " and " + posPre2);
-//		Log.w("Debuggin", "Our positions afterwards are " + posPost1 + " and " + posPost2 + pos + "");
 		
 		
 		// We check if the current relative velocities will bring the balls further apart or not.
 		if(areSameDirection(posDiff, velDiff)) {
 			Log.w("Debuggin", "We think this is not a good colission to do ");
 			return; // We don't perform a colission since they will separate naturally.
-		}
-		
-		 	 
+		}		 	 
 		// v' = v + atm constant mass factor * v1 - v2 dot x1 - x2 / r^2 * x1 - x2
 		// http://en.wikipedia.org/wiki/Elastic_collision#Two-Dimensional_Collision_With_Two_Moving_Objects
 		// posDiff = x1 - x2
@@ -240,7 +242,10 @@ public class Ball {
 		force.normalize();
 		
 		vel = force.multret(slowDown * forceConstant / weight);
-//		Log.w("Debuggin", "We touch the ball, the resulting force is " + force.x + " " + force.y);
+		
+		/// Lets add some spin to this fool.
+		this.spin += force.x * clickSpin;
+		Log.w("Debuggin", "We touch the ball, the resulting spin is" + force.x * clickSpin + " total spin is" + spin);
 		return true;
 	}
 	

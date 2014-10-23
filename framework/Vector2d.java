@@ -100,6 +100,10 @@ public class Vector2d {
 		return new Vector2d(this.x * otherVec.x, this.y * otherVec.y);
 	}
 
+	/// Returns the cross product, this x otherVec.
+	public double cross(Vector2d otherVec){
+		return (this.x * otherVec.y) - (this.y * otherVec.x);
+	}
 	
 	public double innerProd(Vector2d otherVec){
 		return (this.x * otherVec.x) +  (this.y * otherVec.y);

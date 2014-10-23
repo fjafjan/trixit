@@ -4,9 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import android.content.SharedPreferences;
-import android.content.SharedPreferences.Editor;
-import android.graphics.Paint;
 import android.media.AudioManager;
 import android.util.Log;
 
@@ -18,65 +15,56 @@ import com.trixit.game.GameScreen.GameState;
 
 /// This class handles all the game logic of balls, collisions and touches. 
 public class Engine {
-	double id;
 	Random random = new Random();
 	GameState state = GameState.Ready;
-	SharedPreferences settings;
 
-	// Create game objects here....
-	Paint paint, paint2;
-	
-	int score, livesleft, maxBalls, addBallScore, noFailScore;
-	
-//	int ballSize;
 	List<Ball> balls;
-	Ball testBall;
 	TennisBall tennisball;
+	
+	/// Variables that change during the course of a game.
+	int score, livesleft, highScore;
+	/// Variables that are set once and should not change during a game
+	int gameHeight, gameWidth, maxBalls, addBallScore, noFailScore;
 	double chanceOfMod, tennisSpeed, forceConstant, slowDown, gravity;
-	double touchRadius, livesIndFactor;
-	int gameHeight, gameWidth, startSpeed, highScore;
+	double startSpeed, touchRadius;
+	
 	float volume;
 
-	public Engine(double d){
-		id = d;
+	public Engine(int gameWidth, int gameHeight){
 		// Here we have various options that can be tweaked and adjusted. 
 		livesleft = 3;       	/// The number of bounces on the ground allowed. 
 		chanceOfMod = 0.0;		/// Chance of spawning a tennis ball that in the future will modify the game in some way. 
 		forceConstant = 1.9;	/// Linearly increases the force applied by a click. 
-		slowDown = 0.09;		/// Linearly slows down the game. 
+		slowDown = 0.9;		/// Linearly slows down the game. 
 		gravity = 0.28;        	/// The gravitational acceleration at every
 		startSpeed = 12;		/// The initial vertical speed of a new ball.
 		tennisSpeed = 15;     	/// The initial speed of a tennis ball. 
 		maxBalls = 3;         	/// The maximum number of balls. 
 		addBallScore = 5;    	/// At each increment of this score another ball is added.
 		touchRadius = 35;       /// The radius of a touch point for collision detection, aka finger thickness.
-		livesIndFactor = 0.4;	/// How much smaller the little balls indicating lives left are. 
+		 
 		
 		// Initialize game object here
-		gameHeight = 1000;							/// Yeah yeah. The height of the game.
-		gameWidth = 2000;	/// The diagonal of the square... no it's just the width.
+		this.gameWidth = gameWidth;					/// The diagonal of the square... no it's just the width.
+		this.gameHeight = gameHeight;				/// Yeah yeah. The height of the game.
 		score = 0;									/// The score. Duh. 
 		noFailScore = 0;							/// The number of points without dropping a ball
 		balls = new ArrayList<Ball>();				/// The list of all balls in use.
 		addBall();									/// We add the first ball to the game.
-		testBall = new Ball(0,0,0,0);         		/// Used for getting various ball properties, 
 													/// but never drawn or updated etc.
 		balls.get(0).setSlowDown(slowDown);			/// We set the slowdown factor of ALL balls (static)
-		balls.get(0).setGravity(gravity);			/// We set the gravity constant of ALL balls 
+		balls.get(0).setGravity(gravity);			/// We set the gravity constant of ALL balls
+		balls.get(0).setMinTouchTime(25);			/// The minimum amount of time between touches.
 
 		volume = AudioManager.STREAM_MUSIC;			/// We set the volume of the game to be the 
 													/// current music volume
 		
-		/// EMPORARY
-		if( noFailScore > (addBallScore*balls.size()) ){
-			if(balls.size() < maxBalls)
-				addBall();
-		}
+		/// TEMPORARY
 
 	}
 	
 
-	private void collideDragEvents(ArrayList<DragEvent> dragEvents, double deltaTime) {
+	public void collideDragEvents(ArrayList<DragEvent> dragEvents, double deltaTime) {
 		// If we have multiple dragEvents we check each
 		for (int i = 0; i < dragEvents.size(); i++) {
 			// For each such dragEvent we look at each "click"
@@ -108,38 +96,44 @@ public class Engine {
 		}
 	}
 
-//	private void printDragEvents(ArrayList<DragEvent> dragEvents) {
-//		for (int i = 0; i < dragEvents.size(); i++) {
-//			Log.w("Debuggin", "Dragevent nr " + dragEvents.get(i).id);
-//			dragEvents.get(i).printEvents();
-//		}
-//	}
+	public void updateBalls(double deltaTime){
 
-	private void updateBalls(double deltaTime){
+		/// If we have gotten a decent amount of points without messing up we crank it up by adding a ball.
+		if( noFailScore > (addBallScore*balls.size()) ){
+			if(balls.size() < maxBalls)
+				addBall();
+		}
+
+		
+		/// Update all regular balls
 		for(int i=0 ; i < balls.size() ; i++){
 			balls.get(i).update(deltaTime);
+			Vector2d pos = balls.get(i).getPos();
+			// We check for collisions
+			
+			// Log.w("Debuggin", "Ball " + i + " is at " + balls.get(i).getPos());
+			
+			Ball collidedWith = inBall(pos, balls.get(i));
+			balls.get(i).collide(collidedWith);
+			checkEdges(balls.get(i));			
+//			int collidedWith = inBall(pos, balls.get(i).getSize()/2.);
+//			if( collidedWith != -1 && collidedWith != i){
+//				if(collidedWith == -2){
+//					Log.w("Debuggin", "We are colliding tennisball");
+//					balls.get(i).collide(tennisball);
+//				}else if(collidedWith < i){
+//					balls.get(i).collide(balls.get(collidedWith));
+//				}
+//			}
+			/// We handle edge cases where the ball collides with a wall below.
 		}
+
+		/// If we have a tennisball, update that too.
 		if(tennisball != null){
 			tennisball.update(deltaTime);
 			checkEdges(tennisball);
 			if(tennisball.destroy)
 				tennisball = null;
-		}
-		for(int i=0 ; i < balls.size() ; i++){
-			Vector2d pos = balls.get(i).getPos();
-			// We check for collisions
-			
-			int collidedWith = inBall(pos, balls.get(i).getSize()/2.);
-			if( collidedWith != -1 && collidedWith != i){
-				if(collidedWith == -2){
-					Log.w("Debuggin", "We are colliding tennisball");
-					balls.get(i).collide(tennisball);
-				}else if(collidedWith < i){
-					balls.get(i).collide(balls.get(collidedWith));
-				}
-			}
-			/// We handle edge cases where the ball collides with a wall below.
-			checkEdges(balls.get(i));			
 		}
 	}
 	
@@ -148,7 +142,7 @@ public class Engine {
 	/// the playing field, with no horizontal speed and a fixed upward vertical velocity. 
 	private void addBall(){
 		noFailScore = 0;
-		double ballSize = tennisball.getSize();
+		double ballSize = new Ball(0,0,0,0).getSize();
 		
 		/// If there are no balls, or if the space we want to spawn a ball is empty.
 		/// Note that we could actually use half the ballSize here, but making sure that 
@@ -208,13 +202,13 @@ public class Engine {
 		// over step represent the amount the ball has went outside the
 		double overstep = 0;
 		// game area.
-		if(pos.x < minPosX){
+		if(pos.x < minPosX){ // Left side
 			overstep = (minPosX - pos.x);
-			ball.bounceX(ballSize/2 + overstep );
+			ball.bounceX(ballSize/2 + overstep, -1 );
 		/// If the ball edge goes outside the right wall
-		}else if(pos.x > maxPosX){			 
+		}else if(pos.x > maxPosX){ // Right side	 
 			overstep = (pos.x - maxPosX);
-			ball.bounceX(maxPosX - overstep);
+			ball.bounceX(maxPosX - overstep, 1);
 		}
 		
 		/// If the edge of the ball goes outside the top wall/roof
@@ -237,7 +231,6 @@ public class Engine {
 				livesleft -= 1;
 				if (livesleft <= 0){
 					Log.w("Debuggin", "Game is over :(");
-					checkHighScore();
 					state = GameState.GameOver;
 				}
 			}else{
@@ -245,15 +238,18 @@ public class Engine {
 			}
 		}
 		// If we have collided with one of the edges
-		if (overstep > 0) {
+		if (overstep > 0 && pos.y < maxPosY) {
 			playSound(Assets.bounces);
+			ball.getY();
 		}
+		
+		ball = null;
 
 	}
 
 	
 	
-	private void tryTouch(TouchEvent event){
+	public void tryTouch(TouchEvent event){
 		int ballTouched = inBall(event.x, event.y, touchRadius); 
 		// If we did not intersect with any ball then we just go back.
 		if (ballTouched == -1){
@@ -284,6 +280,7 @@ public class Engine {
 	}
 	
 
+	
 	// Determines if the position at pos x, y is within a radius of either any ball or
 	// tennis ball. If so, it returns the index of the ball or -2 respectively. If not, 
 	// returns -1.
@@ -314,7 +311,7 @@ public class Engine {
 			if ( pos.diff(ballPos).length()  < ((ballSize/2)  + radius)){
 //  			double firstDiff = pos.diff(ballPos).length();
 //				double otherDiff = ballPos.diff(pos).length();
-				Log.w("Debuggin", "we find a collision with ball " + i);
+//				Log.w("Debuggin", "we find a collision with ball " + i);
 				return i;
 			}
 		}
@@ -325,30 +322,25 @@ public class Engine {
 		return inBall(pos.x, pos.y, radius);
 	}
 
-	private int getHighScore(){		
-		if(settings.contains("highScore")){
-			highScore = settings.getInt("highScore", 0);
-			return highScore;
+	/// Similar to above, but checks if the ball b intersects with any other ball and if so returns
+	/// that ball, or -1.
+	private Ball inBall(Vector2d pos, Ball b){
+		double radius = b.getSize()/2;
+		int ballIndex = inBall(pos.x, pos.y, radius);
+		if(ballIndex == -2){
+			return tennisball;
+		}else if(ballIndex == -1 || b.equals(balls.get(ballIndex))){
+			return null;
 		}else{
-			Editor edit = settings.edit();
-			edit.putInt("highScore", 0);
-			edit.commit();
-			return 0;
+			return balls.get(ballIndex);
 		}
 	}
 
-	private void checkHighScore(){
-		if (score > highScore){
-			Editor edit = settings.edit();
-			edit.putInt("highScore", score);
-			edit.commit();
-		}
-	}
-
+	/// Plays a randomly selected Sound from sounds.	
 	private void playSound(Sound[] sounds){
 		int length = sounds.length;
 		int pick = random.nextInt(length);
 		sounds[pick].play(volume);
 	}
-	
+
 }

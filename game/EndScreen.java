@@ -15,16 +15,20 @@ import com.trixit.framework.Input.TouchEvent;
 
 public class EndScreen extends Screen{
 
-	int score;
 	Paint paint;
 	Random random = new Random();
+
+	int score;
 	int gameWidth, gameHeight;
 	String grade, review;
 	double timeAlive, waitTime;
+	boolean isHighScore;
 	
-	public EndScreen(Game game, int score) {
+	public EndScreen(Game game, int score, boolean isHighScore) {
 		super(game);
 		this.score = score;
+		this.isHighScore = isHighScore;
+		
 		this.gameWidth = game.getGraphics().getWidth();
 		this.gameHeight = game.getGraphics().getHeight();
 		
@@ -72,6 +76,11 @@ public class EndScreen extends Screen{
         g.drawString(grade, gameWidth/2, gameHeight/2 + 150, paint);
         paint.setTextSize(50);
         drawLongString(review, gameWidth/2, gameHeight/2 + 300, 50);
+        
+        if(this.isHighScore){
+        	String congratulations = "Congratulations! \n Your new high score is: " + score;
+        	drawLongString(congratulations , gameWidth/2, 50, 50);
+        }
 	}
 
     private String getGrade(int score){
@@ -130,7 +139,7 @@ public class EndScreen extends Screen{
 			reviews.add("I hope you can do better");
 			reviews.add("You are not gifted");
 			reviews.add("Almost acceptable");
-			reviews.add("You should lie about this result");
+			reviews.add("You should lie \n about this result");
 			reviews.add("D stands for Dumb");
     	}else if (grade == "C"){
     		reviews.add("You are mediocre!");
@@ -140,7 +149,7 @@ public class EndScreen extends Screen{
 			reviews.add("Acceptable");
 			reviews.add("Not disappointing");
 			reviews.add("You achieved the bare minimum");
-			reviews.add("C stands for ... I don't even know");
+			reviews.add("C stands for ... \n I don't even know");
     	}else if (grade == "B"){
     		reviews.add("You did okay");
     		reviews.add("A decent performance!");
@@ -150,8 +159,8 @@ public class EndScreen extends Screen{
     		reviews.add("B stands for Barely good");
     	}else if (grade == "A"){
     		reviews.add("You got some moves");
-    		reviews.add("You could be an olympic time waster!");
-    		reviews.add("You can now move on with your life");
+    		reviews.add("You could be an olympic \n time waster!");
+    		reviews.add("You can now move on with \n your 'life'");
     		reviews.add("What do you want? A gold star?");
     		reviews.add("Good job!");
     		reviews.add("A stands for awesome");
