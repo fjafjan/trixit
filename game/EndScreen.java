@@ -79,7 +79,10 @@ public class EndScreen extends Screen{
         
         if(this.isHighScore){
         	String congratulations = "Congratulations! \n Your new high score is: " + score;
-        	drawLongString(congratulations , gameWidth/2, 50, 50);
+        	drawLongString(congratulations , gameWidth/2, gameHeight - 100, 50);
+        }else{
+        	String scoreStr = "Your score was " + score;
+        	drawLongString(scoreStr , gameWidth/2, gameHeight - 100, 50);
         }
 	}
 
@@ -122,6 +125,7 @@ public class EndScreen extends Screen{
 			reviews.add("Straight up very bad");
 			reviews.add("I hope this was your first try");
 			reviews.add("I will need to speak with \n your parent or guardian");
+			reviews.add("Maybe it's time you move ");
 			reviews.add("F stands for Failure");
     	}else if (grade == "E"){
     		reviews.add("Still very bad");

@@ -42,7 +42,7 @@ public class Engine {
 		tennisSpeed = 15;     	/// The initial speed of a tennis ball. 
 		maxBalls = 3;         	/// The maximum number of balls. 
 		addBallScore = 5;    	/// At each increment of this score another ball is added.
-		touchRadius = 35;       /// The radius of a touch point for collision detection, aka finger thickness.
+		touchRadius = 50;       /// The radius of a touch point for collision detection, aka finger thickness.
 		 
 		
 		// Initialize game object here
@@ -219,7 +219,7 @@ public class Engine {
 		/// If the edge of the ball goes outside the top wall/roof
 		if(pos.y < minPosY){
 			overstep = minPosY - pos.y;
-			ball.bounceY(minPosY + overstep);
+			ball.bounceY(minPosY + overstep, -1);
 		/// If the edge of the ball goes outside the floor
 		}else if(pos.y > maxPosY){
 			if(ball instanceof TennisBall){
@@ -228,7 +228,7 @@ public class Engine {
 				Log.w("Debuggin", "We are destroying the tennisball at position" + tennisball.getPos());
 			}else if(ball instanceof Ball){
 				overstep = pos.y - maxPosY;
-				ball.bounceY(maxPosY - overstep);
+				ball.bounceY(maxPosY - overstep, 1);
 				balls.remove(ball);
 				if (balls.isEmpty())
 					addBall();

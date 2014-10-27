@@ -16,21 +16,22 @@ public class Ball {
 	private static double slowDown = 1;
 	private static double gravity = 0.2;
 	private static double minTouchTime = 25;
+	private static double clickFriction = 0.2;
 	
 	
 	public double size, bounceCoef, weight, friction, clickSpin;
 	public Ball(double xPos,double yPos, double xVel, double yVel, double spin){
 		this.pos = new Vector2d(xPos, yPos);
 		this.vel = new Vector2d(xVel, yVel);
+		this.spin = spin;
 		size = 100; // I don't really make sure that this matches the size of the image right?
 		bounceCoef = 0.7;
 		weight = 1./10.;
 		unTouchedTime = 800;
 		angle = 0;
-		spin = 0;
 		maxSpin = 40;
-		friction = 1.2; // This should probably be static
-		clickSpin = 15;
+		friction = 0.5; // This should probably be static
+		clickSpin = 10;
 	}
 	
 	
@@ -70,19 +71,38 @@ public class Ball {
 	}
 	
 	public void bounceX(double xPos, int side){
+		/// Simple bounce.
 		this.pos.x = xPos;
 		this.vel.x *= -bounceCoef;
+		
+		/// Spin interactions.
 		double relativeVelocity = vel.y + (side * spin); // The relative velocity of the edge of the ball. 
 		double spinFactor = side * ( relativeVelocity * friction );
-//		Log.w("Debuggin", "spinFactor is " + spinFactor);
-//		Log.w("Debuggin", "relativeVelocity is " + relativeVelocity);
-//		Log.w("Debuggin", "spin is " + spin);
+		Log.w("Debuggin", "spinFactor is " + spinFactor);
+		Log.w("Debuggin", "relativeVelocity is " + relativeVelocity);
+		Log.w("Debuggin", "spin is " + spin);
 		this.spin -= spinFactor;
+
+		double spinInteractionConsant = 0.5 * 2 * 3.14159265 / 360. ;
+		this.vel.y += size * -spinFactor * side * spinInteractionConsant * friction;
+
 	}
 	
-	public void bounceY(double yPos){
+	
+	
+	public void bounceY(double yPos, int side){
 		this.pos.y  = yPos;
 		this.vel.y *= -bounceCoef*0.7;
+		
+		/// Spin interactions.
+		double relativeVelocity = vel.y + (side * spin); // The relative velocity of the edge of the ball. 
+		double spinFactor = side * ( relativeVelocity * friction ); /// BETTER NAME NEEDED
+		this.spin -= spinFactor;
+		
+		double spinInteractionConsant = 0.5 * 2 * 3.14159265 / 360. ;
+
+		this.vel.x += size * spinFactor * side * spinInteractionConsant * friction;
+		
 	}
 	
 	// These functions return a copy vector in order to avoid another routine tampering 
@@ -247,8 +267,28 @@ public class Ball {
 		
 		vel = force.multret(slowDown * forceConstant / weight);
 		
-		/// Lets add some spin to this fool.
-		this.spin += force.x * clickSpin;
+		// Let's add the force component from the spin.
+		// 0.5 ~= 1/5
+		/// And the existing spin causes some horizontal movement
+		/// 0.5 is half the diameter, the rest is just from degrees to radians. 
+		double spinInteractionConsant = 0.5 * 2 * 3.14159265 / 360.;
+		this.vel.x += size * spin * spinInteractionConsant * friction;
+		this.spin -= spin * friction;
+		
+		
+		
+		/// Break the force into one component 
+		/// We add some spin
+		
+		/// This is the normal vector of the surface where we kick
+		Vector2d normal = pos.diff(clickPos);
+		normal.normalize();
+		Vector2d spinVec = new Vector2d(-normal.y, normal.x);
+		double spinIncremenent = new Vector2d(0,-1).dot(spinVec) * -clickSpin; 
+		this.spin += spinIncremenent;
+		
+//		vel.x += spinVelocity;
+
 		Log.w("Debuggin", "We touch the ball, the resulting spin is" + force.x * clickSpin + " total spin is" + spin);
 		return true;
 	}

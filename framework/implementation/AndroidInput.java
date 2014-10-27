@@ -17,7 +17,7 @@ import com.trixit.framework.Input;
 
 // Now replaces the "touchHandler" class in the example since I don't care about single touch devices.
 public class AndroidInput implements Input, OnTouchListener {
-    private static final int MAX_TOUCHPOINTS = 10;    	
+    private static final int MAX_TOUCHPOINTS = 2;    	
     
     // List of is touched, touch positions and the ID of different touches to keep track of user input.
     boolean[] isTouched = new boolean[MAX_TOUCHPOINTS];

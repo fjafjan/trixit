@@ -6,8 +6,12 @@ package com.trixit.game;
 import java.util.List;
 import java.util.ArrayList;
 
+import android.R;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.content.Context;
 import android.graphics.Paint;
 import android.graphics.Color;
 import android.media.AudioManager;
@@ -33,7 +37,8 @@ public class GameScreen extends Screen {
 	Paint paint, paint2;
 
 	SharedPreferences settings;
-
+	PackageManager manager;
+	
 	Ball testBall;
 	double livesIndFactor;
 	int gameHeight, gameWidth, highScore;
@@ -67,6 +72,11 @@ public class GameScreen extends Screen {
 		paint2.setColor(Color.WHITE);
 
 		settings = game.getSettings();				/// A settings object storing variables between games.
+		String version = getVersion();
+		if (checkVersion(version)){					/// If we have a new version
+			setHighScore(0);						/// Sets the highscore to 0 
+		}
+		
 		highScore = getHighScore();					/// The high score on this device. Duh. 
 		
 	} 
@@ -162,6 +172,21 @@ public class GameScreen extends Screen {
 		g.drawString("Click to begin", gameWidth/2, gameHeight/2, paint);
 	}
 
+	/// Given the current String version of the version of the game 
+	/// we check if the version has changed since last we ran. If so returns true
+	private boolean checkVersion(String version){
+		if(settings.contains("version")){
+			if(settings.getString("version", "").equals(version)){
+				return false;
+			}
+		}
+		// Either the version if our of date, or we have never set it before. 
+		Editor edit = settings.edit();
+		edit.putString("version", version);
+		edit.commit();
+		return true;
+	}
+	
 	/// Returns the current highscore. If there is no highscore, we create it and set it to 0.
 	private int getHighScore(){		
 		if(settings.contains("highScore")){
@@ -175,21 +200,29 @@ public class GameScreen extends Screen {
 		}
 	}
 
-	/// Checks if the current score is higher
+	/// Checks if the current score is higher. If so it sets
+	/// the current high score to that score. 
 	private boolean checkHighScore(){
 		if (engine.score > highScore){
-			Editor edit = settings.edit();
-			edit.putInt("highScore", engine.score);
-			edit.commit();
+			setHighScore(engine.score);
 			return true;
 		}
 		return false;
 	}
 
+	private void setHighScore(int score){	
+		Editor edit = settings.edit();
+		edit.putInt("highScore", score);
+		edit.commit();
+	}
+
+	
 	
 	private void drawRunningUI() {
 		AndroidGraphics g = (AndroidGraphics) game.getGraphics();
 		g.clearScreen(0);
+		int backGroundColor = Color.argb(255, 25, 25, 25);
+		g.drawRect(0, 0, gameWidth+1, gameHeight+1, backGroundColor);
 		g.drawString("Score : " + engine.score, gameWidth - 400, 50, paint2);
 		g.drawString("Lives : ", 80, 50, paint2);
 		// Try to draw a small ball at this spot instead.
@@ -230,6 +263,25 @@ public class GameScreen extends Screen {
     private void drawGameOverUI() {
     	boolean isHighScore = checkHighScore();
     	game.setScreen(new EndScreen(game, engine.score, isHighScore));
+    }
+    
+    private String getVersion(){
+    	String version = "";
+
+    	try {
+    		Context context = (Context) game;
+    		PackageManager manager = context.getPackageManager();
+    	    PackageInfo info = manager.getPackageInfo(
+    	    context.getPackageName(), 0);
+    	    version = info.versionName;
+    	} catch (Exception e) {
+    		Log.w("Debuggin", "Error getting version");
+    		return "";
+    	}
+    	
+
+    	Log.w("Debuggin", "Game version is " + version);
+    	return version;
     }
 
 	@Override

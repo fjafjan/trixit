@@ -3,50 +3,19 @@ Known issues:
 0) Keep tweaking variables
 
 Today
-1) Add rotation
-	Theory: For the simple case of a ball colliding with a wall
-	we should have this: 	
-	Angular momentum += torque * time
-	torque = Force * radius
-	Force = relative velocity * friction.	
-	and since
-	I = 2 m r^2
-	Angular momentum = I * w => 
-	w += torque * time / moment of inertia =>
-	w += relative velocity * friction * time / radius * mas
-	with a generalized friction constant. 
-	relative velocity is in this case the perpendicular velocity 
-	component plus  spin * radius. 
-	Add rotation adding in collisions between balls
-		So angular momentum should be conserved
-		which means we only need to estimate the 
-		interaction term
-	Add rotation adding in collisions to the roof
-	Add a small random rotation at the start
-	Add rotation adding to dragging
 
-2) Change background
+
 
 Tomorrow
-3) Add server communication to check "global" high scores. 
+1) Add server communication to check "global" high scores. 
+
+2) Fix dragging including spin
 
 3) Make the touch radius a property of the ball instead of the click
    so that regular balls can have a larger touch radius and the tennisballs
    can have a smaller one, making them harderrrr.
 
-1) Add some custom modes to the tennis balls.
-	No gravity mode
-     	Slow speed mode
-     	Wacky movement mode (quantum balls?)
-	Double scoring
-	Double speed
-	Add life
-	Inverse gravity mode
-	ball attraction mode
-	ball reppellation mode
-	Flubber mode
-    	etc etc
-
+4) Check for collisions between ball movement. 
 
 4) Print FPS
 
@@ -55,6 +24,11 @@ Tomorrow
 Known bugs:
     Swiping doesn't swipe, only clicks multiple times. 
 	On Glazes phone, holding does not detect as a held touch.     
+
+Luxury:
+	Move review lines to a separate file to be read. 
+	Rewrite the endscreen drawing to be relative to fit different layouts.
+	
 
 WRITE A MARCOV PREDICTOR MIXER OF SOME BRAINDEAD POPSTAR AND MARX
 Fix UI in general
@@ -68,5 +42,18 @@ http://stackoverflow.com/questions/10648325/android-smooth-game-loop
 seems very interesting. 
 
 Look up ragdoll implementation
+
+1) Add some custom modes to the tennis balls.
+	No gravity mode
+     	Slow speed mode
+     	Wacky movement mode (quantum balls?)
+	Double scoring
+	Double speed
+	Add life
+	Inverse gravity mode
+	ball attraction mode
+	ball reppellation mode
+	Flubber mode
+    	etc etc
 
 That's enuff for now. 

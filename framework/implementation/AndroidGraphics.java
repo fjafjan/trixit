@@ -9,7 +9,6 @@ import android.graphics.Bitmap.Config;
 import android.graphics.BitmapFactory;
 import android.graphics.BitmapFactory.Options;
 import android.graphics.Canvas;
-import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Paint.Style;
 import android.graphics.Rect;
@@ -197,7 +196,7 @@ public class AndroidGraphics implements Graphics {
         float imageCenterY = (float)(y + (image.getHeight() * scale * 0.5));
 //        Log.w("Debuggin", "imageCenter is " + imageCenterX + " , " + imageCenterY);
 //        Log.w("Debuggin", "normal xy are  " + (x+50) + " , " + (y+50));
-        Log.w("Debuggin", "Angle is " + angle);
+//        Log.w("Debuggin", "Angle is " + angle);
 
         canvas.save(Canvas.MATRIX_SAVE_FLAG);
         canvas.rotate((float) angle, imageCenterX, imageCenterY);
