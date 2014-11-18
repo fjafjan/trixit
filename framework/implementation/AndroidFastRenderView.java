@@ -13,6 +13,21 @@ public class AndroidFastRenderView extends SurfaceView implements Runnable{
 	SurfaceHolder holder;
 	// What does volatile and synchronized really mean?	
 	volatile boolean running = false;
+
+	
+	/// TESTING STUFF BEGIN
+	// avoid GC in your threads. declare nonprimitive variables out of onDraw
+    float smoothedDeltaRealTime_ms=17.5f; // initial value, Optionally you can save the new computed value (will change with each hardware) in Preferences to optimize the first drawing frames 
+    float movAverageDeltaTime_ms=smoothedDeltaRealTime_ms; // mov Average start with default value
+    long lastRealTimeMeasurement_ms; // temporal storage for last time measurement
+
+    // smooth constant elements to play with
+    static final float movAveragePeriod=40; // #frames involved in average calc (suggested values 5-100)
+    static final float smoothFactor=0.1f; // adjusting ratio (suggested values 0.01-0.5)
+
+    /// TESTING STUFF END
+	
+	
 	
 	public AndroidFastRenderView(AndroidGame game, Bitmap framebuffer){
 		super(game);
@@ -39,14 +54,36 @@ public class AndroidFastRenderView extends SurfaceView implements Runnable{
 			
 			float deltaTime = (System.nanoTime() - startTime) / 1000000.000f;
 			startTime = System.nanoTime();
+
 			
+
+
+
+	        // Moving average calc
+
+//	        long currTimePick_ms= (long) startTime/1000000;
+//	        float realTimeElapsed_ms;
+//	        if (lastRealTimeMeasurement_ms>0){
+//	        realTimeElapsed_ms=(currTimePick_ms - lastRealTimeMeasurement_ms);
+//	        } else {
+//	                 realTimeElapsed_ms=smoothedDeltaRealTime_ms; // just the first time
+//	        }
+//	        movAverageDeltaTime_ms=(realTimeElapsed_ms + movAverageDeltaTime_ms*(movAveragePeriod-1))/movAveragePeriod;
+
+	         // Calc a better aproximation for smooth stepTime
+//	        smoothedDeltaRealTime_ms=smoothedDeltaRealTime_ms +(movAverageDeltaTime_ms - smoothedDeltaRealTime_ms)* smoothFactor;
+
+//	        lastRealTimeMeasurement_ms=currTimePick_ms;
+
+//	        deltaTime = smoothedDeltaRealTime_ms;
 			// If it's too slow then .. we set it to something? 
 			// This whole thing is used to base movement and activity
 			// on actual time as opposed to framerate, as each iteration
 			// of this loop can occur arbitrarily quickly or slowly.
-			// The limit of 3.15 is to prevent things for going too slowly.
-			if (deltaTime > 3.15){
-				deltaTime = (float) 3.15;
+			// The limit of 31.5 is to prevent things for going too slowly.
+	        //deltaTime = (System.nanoTime() - startTime) / 1000000.000f;
+			if (deltaTime > 31.5){
+				deltaTime = (float) 31.5;
 			}
 			
 			game.getCurrentScreen().update(deltaTime);

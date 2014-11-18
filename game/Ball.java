@@ -16,10 +16,11 @@ public class Ball {
 	private static double slowDown = 1;
 	private static double gravity = 0.2;
 	private static double minTouchTime = 25;
-	private static double clickFriction = 0.2;
+	private static double momentOfInertia = 0.2;
+	private static double friction = 0.5;
 	
+	public double size, bounceCoef, weight, clickSpin;
 	
-	public double size, bounceCoef, weight, friction, clickSpin;
 	public Ball(double xPos,double yPos, double xVel, double yVel, double spin){
 		this.pos = new Vector2d(xPos, yPos);
 		this.vel = new Vector2d(xVel, yVel);
@@ -27,11 +28,10 @@ public class Ball {
 		size = 100; // I don't really make sure that this matches the size of the image right?
 		bounceCoef = 0.7;
 		weight = 1./10.;
-		unTouchedTime = 800;
+		unTouchedTime = 0;
 		angle = 0;
 		maxSpin = 40;
-		friction = 0.5; // This should probably be static
-		clickSpin = 10;
+		clickSpin = 3;
 	}
 	
 	
@@ -64,8 +64,8 @@ public class Ball {
 	}
 	
 	public void update(double deltaTime){
-		pos.plus( (vel.multret(deltaTime * slowDown)) );
-		vel.y += gravity * deltaTime * slowDown;
+		pos.plus( (vel.multret(deltaTime)) );
+		vel.y += gravity * deltaTime;
 		this.angle += spin;
 		unTouchedTime += deltaTime;
 	}
@@ -78,13 +78,13 @@ public class Ball {
 		/// Spin interactions.
 		double relativeVelocity = vel.y + (side * spin); // The relative velocity of the edge of the ball. 
 		double spinFactor = side * ( relativeVelocity * friction );
-		Log.w("Debuggin", "spinFactor is " + spinFactor);
-		Log.w("Debuggin", "relativeVelocity is " + relativeVelocity);
-		Log.w("Debuggin", "spin is " + spin);
+		//Log.w("Debuggin", "spinFactor is " + spinFactor);
+		//Log.w("Debuggin", "relativeVelocity is " + relativeVelocity);
+		//Log.w("Debuggin", "spin is " + spin);
 		this.spin -= spinFactor;
 
 		double spinInteractionConsant = 0.5 * 2 * 3.14159265 / 360. ;
-		this.vel.y += size * -spinFactor * side * spinInteractionConsant * friction;
+		this.vel.y += size * -spinFactor * side * spinInteractionConsant * friction * momentOfInertia;
 
 	}
 	
@@ -101,7 +101,7 @@ public class Ball {
 		
 		double spinInteractionConsant = 0.5 * 2 * 3.14159265 / 360. ;
 
-		this.vel.x += size * spinFactor * side * spinInteractionConsant * friction;
+		this.vel.x += size * spinFactor * side * spinInteractionConsant * friction * momentOfInertia;
 		
 	}
 	
@@ -130,14 +130,36 @@ public class Ball {
 	public void setVel(Vector2d vel){
 		this.vel = new Vector2d(vel);
 	}
+	
+	public void setSize(double s){
+		size = s;
+	}
+	
+	public void resetUnTouchedTime(){
+		this.unTouchedTime = 0;
+	}
+	
+	public void setWeight(double w){
+		this.weight = w;
+	}
 
 	public void setSlowDown(double slowdown){
 		slowDown = slowdown;
 	}
+
+	public void setInertia(double i){
+		momentOfInertia = i;
+	}
+
 	
 	public void setGravity(double g){
 		gravity = g;
 	}
+
+	public void setFriction(double f){
+		friction = f;
+	}
+
 	
 	public void setMinTouchTime(int t){
 		minTouchTime = t;
@@ -212,8 +234,6 @@ public class Ball {
 		double innerProd = posDiff.innerProd(velDiff);
 		
 		
-		// keep this as 1 atm. 
-		// otherBall.weight*2. / (this.weight + otherBall.weight);
 		double massFactor = 2 * otherBall.weight/(this.weight + otherBall.weight) ;  
 		
 		double dist = posDiff.length() * posDiff.length();
@@ -255,27 +275,29 @@ public class Ball {
 		return ans;
 	}
 	
+	public boolean canBeTouched(){
+		return unTouchedTime > minTouchTime;
+	}
+	
 	public boolean click(Vector2d clickPos, double forceConstant){
 		if (unTouchedTime < minTouchTime)
 			 return false;
-		unTouchedTime = 0;
+		resetUnTouchedTime();
 		
 		Vector2d force = pos.diff(clickPos);
 		force.normalize();
 		force.y = -1;
 		force.normalize();
 		
-		vel = force.multret(slowDown * forceConstant / weight);
+		vel = force.multret(forceConstant / weight);
 		
 		// Let's add the force component from the spin.
 		// 0.5 ~= 1/5
 		/// And the existing spin causes some horizontal movement
 		/// 0.5 is half the diameter, the rest is just from degrees to radians. 
 		double spinInteractionConsant = 0.5 * 2 * 3.14159265 / 360.;
-		this.vel.x += size * spin * spinInteractionConsant * friction;
+		this.vel.x += size * spin * spinInteractionConsant * friction * momentOfInertia;
 		this.spin -= spin * friction;
-		
-		
 		
 		/// Break the force into one component 
 		/// We add some spin
@@ -287,9 +309,7 @@ public class Ball {
 		double spinIncremenent = new Vector2d(0,-1).dot(spinVec) * -clickSpin; 
 		this.spin += spinIncremenent;
 		
-//		vel.x += spinVelocity;
-
-		Log.w("Debuggin", "We touch the ball, the resulting spin is" + force.x * clickSpin + " total spin is" + spin);
+		//Log.w("Debuggin", "We touch the ball, the resulting spin is" + force.x * clickSpin + " total spin is" + spin);
 		return true;
 	}
 	
@@ -298,6 +318,17 @@ public class Ball {
 	/// Collides the ball with a swipe from user represented in a list of TouchEvents and an index
 	/// i where the swipe first collided with the ball. deltaTime is the total duration of the swipe.
 	/// Returns if the ball was actually moved or if it was too recent.
+	public boolean drag(Finger finger, int i, double deltaTime){
+		if( unTouchedTime < minTouchTime ){
+			Log.w("Debuggin", "We choose to not detect this touch.  ." + vel);
+			return false;
+		}
+		Vector2d touchDir = finger.pos.diff(this.pos);
+		touchDir.normalize();
+//		updateForce(touchDir.multret(-dragVel.length()/15));
+		unTouchedTime = 0;
+		return true;
+	}	
 	public boolean drag(ArrayList<TouchEvent> events, int i, double deltaTime){
 		if( unTouchedTime < minTouchTime ){
 			Log.w("Debuggin", "We choose to not detect this touch.  ." + vel);

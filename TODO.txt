@@ -2,28 +2,44 @@ Known issues:
 
 0) Keep tweaking variables
 
+
+Known bugs
+	rapid clicking is once again possible
+	dragging produces much less force than clicking
+	On some devices, holding does not count as a click. 
+minor bugs
+	Text stuff
+	Sounds
+
+
+
+DELTA TIME IS ALWAYS A CONSTANT PROBABLY AS A RESULT OF US CHANGING WHAT TIME MEANS
 Today
+IMPROVING PERFORMANCE
+	1) Try different rotation techniques
+	2) Print FPS
+	3) See what options exist for profiling. 
 
-
+2) Fix dragging including spin
 
 Tomorrow
 1) Add server communication to check "global" high scores. 
+	Update the priviliges to reflect this new desire to 
+	use the network. 
+	Look up what NameValuePairs are and how they work. 	
 
-2) Fix dragging including spin
 
 3) Make the touch radius a property of the ball instead of the click
    so that regular balls can have a larger touch radius and the tennisballs
    can have a smaller one, making them harderrrr.
 
-4) Check for collisions between ball movement. 
-
-4) Print FPS
+4) Check for collisions between balls at time t0 and t1.
 
 5) Cut the sounds so that they are more responsive
 	
 Known bugs:
     Swiping doesn't swipe, only clicks multiple times. 
-	On Glazes phone, holding does not detect as a held touch.     
+	On Glazes phone, holding does not detect as a held touch.
 
 Luxury:
 	Move review lines to a separate file to be read. 

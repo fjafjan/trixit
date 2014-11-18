@@ -24,26 +24,32 @@ public class Engine {
 	/// Variables that change during the course of a game.
 	int score, livesleft, highScore;
 	/// Variables that are set once and should not change during a game
-	int gameHeight, gameWidth, maxBalls, addBallScore, noFailScore;
-	double chanceOfMod, tennisSpeed, forceConstant, slowDown, gravity;
+	int gameHeight, gameWidth, maxBalls, addBallScore, noFailScore, minTouchTime;
+	double chanceOfMod, tennisSpeed, forceConstant, dragConstant, slowDown, gravity, friction, momentOfInertia;
 	double startSpeed, startSpin, touchRadius;
-	
+	double relativeWeight;
 	float volume;
+	
 
 	public Engine(int gameWidth, int gameHeight){
 		// Here we have various options that can be tweaked and adjusted. 
 		livesleft = 3;       	/// The number of bounces on the ground allowed. 
 		chanceOfMod = 0.0;		/// Chance of spawning a tennis ball that in the future will modify the game in some way. 
-		forceConstant = 2.4;	/// Linearly increases the force applied by a click. 
-		slowDown = 0.60;   		/// Linearly slows down the game. 
-		gravity = 0.28;        	/// The gravitational acceleration at every
-		startSpeed = 12;		/// The initial vertical speed of a new ball.
+		forceConstant = 0.22;	/// Linearly increases the force applied by a click.
+		dragConstant = 0.3;		/// Linearly increases the force applied by a click.
+		
+		slowDown = 1;   		/// Linearly slows down the game. 
+		gravity = 0.004;       	/// The gravitational acceleration at every
+		friction = 0.5;			/// The amount of interaction between spin and velocity.
+		momentOfInertia = 0.5;	/// The strength of the interaction between spin and velocity.  
+		startSpeed = 0.1;		/// The initial vertical speed of a new ball.
 		startSpin = 5;			/// The maximum initial spin of a new ball.
 		tennisSpeed = 15;     	/// The initial speed of a tennis ball. 
-		maxBalls = 3;         	/// The maximum number of balls. 
+		maxBalls = 1;         	/// The maximum number of balls. 
 		addBallScore = 5;    	/// At each increment of this score another ball is added.
 		touchRadius = 50;       /// The radius of a touch point for collision detection, aka finger thickness.
-		 
+		minTouchTime = 250;
+		relativeWeight = 0.5;	
 		
 		// Initialize game object here
 		this.gameWidth = gameWidth;					/// The diagonal of the square... no it's just the width.
@@ -55,13 +61,13 @@ public class Engine {
 													/// but never drawn or updated etc.
 		balls.get(0).setSlowDown(slowDown);			/// We set the slowdown factor of ALL balls (static)
 		balls.get(0).setGravity(gravity);			/// We set the gravity constant of ALL balls
-		balls.get(0).setMinTouchTime(25);			/// The minimum amount of time between touches.
+		balls.get(0).setMinTouchTime(minTouchTime);	/// The minimum amount of time between touches.
+		balls.get(0).setFriction(friction); 		/// The amount of interaction between spin and velocity.
+		balls.get(0).setInertia(momentOfInertia);	/// The strength of the interaction between spin and vel.
 
 		volume = AudioManager.STREAM_MUSIC;			/// We set the volume of the game to be the 
 													/// current music volume
 		
-		/// TEMPORARY
-
 	}
 	
 
@@ -99,6 +105,8 @@ public class Engine {
 
 	public void updateBalls(double deltaTime){
 
+		
+		double deltaT = deltaTime * slowDown;
 		/// If we have gotten a decent amount of points without messing up we crank it up by adding a ball.
 		if( noFailScore > (addBallScore*balls.size()) ){
 			if(balls.size() < maxBalls)
@@ -108,7 +116,7 @@ public class Engine {
 		
 		/// Update all regular balls
 		for(int i=0 ; i < balls.size() ; i++){
-			balls.get(i).update(deltaTime);
+			balls.get(i).update(deltaT);
 			Vector2d pos = balls.get(i).getPos();
 			// We check for collisions
 			
@@ -131,7 +139,7 @@ public class Engine {
 
 		/// If we have a tennisball, update that too.
 		if(tennisball != null){
-			tennisball.update(deltaTime);
+			tennisball.update(deltaT);
 			checkEdges(tennisball);
 			if(tennisball.destroy)
 				tennisball = null;
@@ -252,10 +260,44 @@ public class Engine {
 
 	}
 
-	
-	
 	public void tryTouch(TouchEvent event){
-		int ballTouched = inBall(event.x, event.y, touchRadius); 
+		Vector2d pos = new Vector2d(event.x, event.y);
+		tryTouch(pos);
+	}
+	
+	public void tryTouch(Vector2d eventPos){
+		int ballTouched = inBall(eventPos.x, eventPos.y, touchRadius); 
+		// If we did not intersect with any ball then we just go back.
+		if (ballTouched == -1){
+			return;
+		}
+		
+		// We touched the tennisball
+		if (ballTouched == -2){
+			// Play a special tennisball sound I think. 
+			//double x = startCustomMode(); // think of  abetter name for this and actually do something with it. 
+			tennisball.destroy = true;
+			return;
+		}
+				
+		if(balls.get(ballTouched).canBeTouched()){
+			balls.get(ballTouched).click(eventPos, forceConstant);
+			// Plays one of the kick sounds. 
+			playSound(Assets.kicks);
+
+			score += 1;
+			noFailScore += 1;
+			if (tennisball == null && random.nextDouble() < chanceOfMod){
+				addTennisBall();
+			}
+		}
+	}
+	
+	public void tryDrag(Finger finger, double deltaTime){
+		double deltaT = deltaTime * slowDown;
+		/// What do we want drag to do? I really want to try the infinite weight idea.
+		int ballTouched = inBall(finger.pos, touchRadius);
+		
 		// If we did not intersect with any ball then we just go back.
 		if (ballTouched == -1){
 			return;
@@ -269,22 +311,74 @@ public class Engine {
 			return;
 		}
 		
-//		Log.w("Debuggin", "We try to push the ball in some direction ");
-		Vector2d eventPos = new Vector2d(event.x, event.y);
-		
-		if(balls.get(ballTouched).click(eventPos, forceConstant)){
-			// Plays one of the kick sounds. 
-			playSound(Assets.kicks);
-
-			score += 1;
-			noFailScore += 1;
-			if (tennisball == null && random.nextDouble() < chanceOfMod){
-				addTennisBall();
+		if(balls.get(ballTouched).canBeTouched()){
+			Log.w("Debuggin", "We think that we should have a drag");
+			
+			/// Using the algorithm from http://stackoverflow.com/questions/1073336/circle-line-collision-detection
+			Vector2d d = finger.vel.multret(deltaT);
+			/// We assume that vel represents d, the firection of the vector.
+			
+			Vector2d startPos = finger.pos.diff(d);
+			Vector2d ballCenterPos = balls.get(ballTouched).getPos();
+			Vector2d f = startPos.diff(ballCenterPos);
+//			double r = (balls.get(ballTouched).getSize()/2) + (touchRadius/2);
+			double r = balls.get(ballTouched).getSize();
+			
+			double a = d.dot(d);
+			double b = 2*f.dot(d);
+			double c = f.dot(f) - (r*r);
+			double discriminant = (b*b) - (4*a*c);
+			Vector2d intersection = new Vector2d(0,0);
+			
+			if(discriminant < 0){	
+				// No intersection
+				Log.w("Debuggin", "Discriminant determines we have no collisiion");
+				return;
+			}else{
+				discriminant = Math.sqrt(discriminant);
+				double t1 = (-b - discriminant)/(2*a);
+				double t2 = (-b + discriminant)/(2*a);
+				
+				intersection = startPos.add(d.multret(t1));
+//				if(t1 >= 0 && t1 <= 1){
+//					// The intersection is what we want.
+//					
+//					intersection = startPos.add(d.multret(t1));
+//					Log.w("Debuggin", "The naive intersection is aat" + intersection);
+//				}else if(t2 >= 0 && t2 <= 1){
+//					intersection = startPos.add(d.multret(t1));
+//				}else if(t1 <= 0 && t2 >=0){
+//					intersection = startPos.add(d.multret(t1));
+//				}else{
+//					// Okay so what reasonably happens is that the entire line is inside the ball, since our touch is prob inside the ball and the length of the vector is quite short. 
+//					// Discriminant is still too dman big though. 
+//					Log.w("Debuggin", "We dont find a good intersection and dont set it at all");
+//					tryTouch(startPos);
+//					return;
+//				}
 			}
+			
+			Log.w("Debuggin", "The distance from intersection to ball center is " + intersection.diff(startPos).length());
+			Log.w("Debuggin", "The finger velocity is " + finger.vel.length());
+			balls.get(ballTouched).click(intersection, finger.vel.multret(dragConstant).length() );
+			/// We move the new very close to the edge. 
+//			intersection = intersection.diff(finger.vel.normalizeToLength(r));
+//			Ball fingerBall = new Ball(intersection, finger.vel.multret(deltaT));
+//			balls.add(fingerBall);
+//			Log.w("Debuggin", "The velocity of this new ball is " + finger.vel.multret(deltaTime));
+//			Log.w("Debuggin", "The velocity of the old ball is " + balls.get(ballTouched).getVel());
+//			double ballWeight = fingerBall.weight;
+//			fingerBall.setWeight(ballWeight * relativeWeight); // close to max int
+//			balls.get(ballTouched).collide(fingerBall);
+//			balls.get(ballTouched).setVel(balls.get(ballTouched).getVel().multret(0.02)); // A dampening.
+//			fingerBall.collide(balls.get(ballTouched));
 		}
+		
+		// Try to not drag on an existing ball :3
+//		balls.add(fingerBall);
+		// We could try adding this ball to balls and seeing how stupidly fast this becomes. I should
+		// change vel to represent the real velocity and have breaks elsewhere. 
 	}
-	
-
 	
 	// Determines if the position at pos x, y is within a radius of either any ball or
 	// tennis ball. If so, it returns the index of the ball or -2 respectively. If not, 

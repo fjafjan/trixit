@@ -9,6 +9,7 @@ import android.graphics.Bitmap.Config;
 import android.graphics.BitmapFactory;
 import android.graphics.BitmapFactory.Options;
 import android.graphics.Canvas;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Paint.Style;
 import android.graphics.Rect;
@@ -198,10 +199,15 @@ public class AndroidGraphics implements Graphics {
 //        Log.w("Debuggin", "normal xy are  " + (x+50) + " , " + (y+50));
 //        Log.w("Debuggin", "Angle is " + angle);
 
-        canvas.save(Canvas.MATRIX_SAVE_FLAG);
-        canvas.rotate((float) angle, imageCenterX, imageCenterY);
-        canvas.drawBitmap(((AndroidImage) image).bitmap, x, y,null);
-        canvas.restore();
+        Matrix drawMatrix = new Matrix();
+        drawMatrix.postRotate((float) angle, image.getWidth()/2, image.getHeight()/2);
+        drawMatrix.postTranslate(x, y);
+        canvas.drawBitmap(((AndroidImage) image).bitmap, drawMatrix, null);
+        canvas.save();
+//        canvas.save(Canvas.MATRIX_SAVE_FLAG);
+ //       canvas.rotate((float) angle, imageCenterX, imageCenterY);
+  //      canvas.drawBitmap(((AndroidImage) image).bitmap, x, y,null);
+   //     canvas.restore();
     	//canvas.drawBitmap(((AndroidImage) image).bitmap, null , dstRect, null);
     }
     

@@ -15,6 +15,8 @@ import android.content.Context;
 import android.graphics.Paint;
 import android.graphics.Color;
 import android.media.AudioManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.util.Log;
 
 import com.trixit.framework.Screen;
@@ -40,15 +42,18 @@ public class GameScreen extends Screen {
 	PackageManager manager;
 	
 	Ball testBall;
-	double livesIndFactor;
+	double livesIndFactor, dragSpeed;
 	int gameHeight, gameWidth, highScore;
 	float volume;
-	
-	
+	/// debuggin variables
+	double averageFPS = 0;
+
+    Finger[] fingers = new Finger[4];
 	
 	public GameScreen(Game game){
 		super(game);
 		livesIndFactor = 0.4;	/// How much smaller the little balls indicating lives left are.		
+		dragSpeed = 0.1;
 		
 		testBall = new Ball(0,0,0,0);         		/// Used for getting various ball properties, 
 		// Initialize game object here
@@ -85,6 +90,7 @@ public class GameScreen extends Screen {
 	public void update(float deltaTime) {
 		List<TouchEvent> touchEvents = game.getInput().getTouchEvents();
 
+		
 		// I think there should only be two states, either running or game over. No 
 		// menues and shit, smooth user experience!
 		if (engine.state == GameState.Ready)
@@ -93,6 +99,8 @@ public class GameScreen extends Screen {
 			updateRunning(touchEvents, deltaTime);
 		if (engine.state == GameState.GameOver)
 			updateGameOver(touchEvents);
+		/// TEMPORARY
+		
 	}
 
 	// Simply lets the user touch the screen to start the game. 
@@ -106,39 +114,99 @@ public class GameScreen extends Screen {
 	}
 
 	private void updateRunning(List<TouchEvent> touchEvents, double deltaTime) {
-		int len =  touchEvents.size();
 		
-		ArrayList<DragEvent> dragEvents = new ArrayList<DragEvent>();
-		// Change this to be a class member instead of function variable.  
-		for (int i = 0; i < len; i++) {
-			TouchEvent event = touchEvents.get(i);
-			if (event.type == TouchEvent.TOUCH_DOWN){
-				engine.tryTouch(event); /// We check if this touch affects a ball.
-			}else if(event.type == TouchEvent.TOUCH_DRAGGED){
-				if(dragEvents.isEmpty()){
-					dragEvents.add(new DragEvent(event));
-				}else{
-					boolean assigned = false;
-					for (int j = 0; j < dragEvents.size(); j++) {
-						if(dragEvents.get(j).id == event.pointer){
-							dragEvents.get(j).addEvent(event);
-							assigned = true;
-						}
-					}
-					/// If there was no other drag event associated with
-					if(!assigned){
-						dragEvents.add(new DragEvent(event));
-					}
-				}
-					// Hopefully all the drag events from one finger appear at least in sequence. 
+		// Add new touch events to each finger
+		updateFingerList(touchEvents, deltaTime);
+		
+		// For each finger, update the position and velocity. 
+		for(int i = 0 ; i < fingers.length ; i++){
+			if(fingers[i] == null){
+				continue;
 			}
-		}		
+			fingers[i].updateFinger(deltaTime);
+//			Log.w("Debuggin", "The current finger velocity for finger " + i + " is " + fingers[i].vel.length());
+			if(fingers[i].vel.length() < dragSpeed){
+				engine.tryTouch(fingers[i].pos);
+			}else{ // else we try dragging
+				engine.tryDrag(fingers[i], deltaTime);
+			}
+		}
+		
+		
+		//ArrayList<DragEvent> dragEvents = new ArrayList<DragEvent>();
+		// Change this to be a class member instead of function variable.  
+//		for (int i = 0; i < len; i++) {
+		//	TouchEvent event = touchEvents.get(i);
+		//	if (event.type == TouchEvent.TOUCH_DOWN){
+		//		engine.tryTouch(event); /// We check if this touch affects a ball.
+		//	}else if(event.type == TouchEvent.TOUCH_DRAGGED){
+		//		if(dragEvents.isEmpty()){
+		//			dragEvents.add(new DragEvent(event));
+		//		}else{
+		//			boolean assigned = false;
+		//			for (int j = 0; j < dragEvents.size(); j++) {
+		//				if(dragEvents.get(j).id == event.pointer){
+		//					dragEvents.get(j).addEvent(event);
+		//					assigned = true;
+		//				}
+		//			}
+					/// If there was no other drag event associated with
+		//			if(!assigned){
+		//				dragEvents.add(new DragEvent(event));
+		//			}
+		//		}
+					// Hopefully all the drag events from one finger appear at least in sequence. 
+		//	}
+		//}		
 		// We have checked all our touch events.
-		engine.collideDragEvents(dragEvents, deltaTime);
+		//engine.collideDragEvents(dragEvents, deltaTime);
 		// Moves all balls forward in time and checks for collisions.
+		
+		
+		// Removes any fingers that have been lifted. 
+		cleanFingers();
+		
 		engine.updateBalls(deltaTime);
 	}
 
+	private void updateFingerList(List<TouchEvent> touchEvents, double deltaTime) {
+		int len =  touchEvents.size();
+		for (int i = 0; i < len; i++) {
+			TouchEvent event = touchEvents.get(i);
+			int id = event.pointer;
+			if (event.type == TouchEvent.TOUCH_DOWN){
+				if (fingers[id] != null)
+					Log.w("Debuggin", "Duplicate fingers in da hizzous");
+//					throw new RuntimeException("Duplicate fingers in da hizzous");
+					
+				fingers[id] =new Finger(event);
+				fingers[id].addEvent(event);
+			}else{
+				if (fingers[id] == null){
+					Log.w("Debuggin", "Finger " + id + " was somehow not touched down ever. Weird!");
+					fingers[id] = new Finger(event);
+				}
+				if(event.type == TouchEvent.TOUCH_DRAGGED){
+					fingers[id].addEvent(event);
+				}else if(event.type == TouchEvent.TOUCH_UP){
+					fingers[id].destroy = true;
+				}
+			}
+		}
+		
+	}
+
+	private void cleanFingers(){
+		for (int i = 0; i < fingers.length; i++) {
+			if(fingers[i] != null){
+				if (fingers[i].destroy){
+					fingers[i] = null;
+//					Log.w("Debuggin", "We have destroyed finger " + i);
+				}
+			}
+		}
+	}
+	
 	private void updateGameOver(List<TouchEvent> touchEvents){
 		//
 		
@@ -152,6 +220,7 @@ public class GameScreen extends Screen {
 			break;
 		case Running:
 			drawRunningUI();
+			printFPS(deltaTime);
 			break;
 		case GameOver:
 			drawGameOverUI();
@@ -235,7 +304,7 @@ public class GameScreen extends Screen {
 			livesXPos += smallBallSize  * 1.3;
 		}
 		
-		g.drawString("Highscore : " + highScore, gameWidth - 200, 50, paint2);
+		g.drawString("High score : " + highScore, gameWidth - 200, 50, paint2);
 		
 		/// We draw all the regular balls.
 		ArrayList<Ball> balls = (ArrayList<Ball>) engine.balls;
@@ -262,7 +331,28 @@ public class GameScreen extends Screen {
 	
     private void drawGameOverUI() {
     	boolean isHighScore = checkHighScore();
+    	
+    	// Move everything below to a new method called something like
+    	// get global highscore or something. 
+//    	Context context = (Context) game;
+ //   	ConnectivityManager connMgr = (ConnectivityManager) 
+  //  			context.getSystemService(Context.CONNECTIVITY_SERVICE);
+   // 	NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
+   // 	if(networkInfo != null && networkInfo.isConnected()){
+    		
+    		// Try to connect to Tbengts server and download that shit. 
+   //	}else{
+    		// say something about network being unavailable and only a local 
+    		// or old high score list is available. 
+   // 	}
     	game.setScreen(new EndScreen(game, engine.score, isHighScore));
+    }
+    
+    private void printFPS(float deltaTime){
+    	double FPS = 1000/deltaTime;
+    	Graphics g = game.getGraphics();
+    	g.drawString("current FPS: " + FPS, gameWidth - 200, gameHeight - 50, paint2);
+    	///Log.w("Debuggin", "current FPS = " + FPS);
     }
     
     private String getVersion(){

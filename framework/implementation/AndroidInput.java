@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.ArrayList;
 
 import android.content.Context;
+import android.util.Log;
 //import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -14,6 +15,7 @@ import android.view.View.OnTouchListener;
 import com.trixit.framework.Pool;
 import com.trixit.framework.Pool.PoolObjectFactory;
 import com.trixit.framework.Input;
+import com.trixit.game.Finger;
 
 // Now replaces the "touchHandler" class in the example since I don't care about single touch devices.
 public class AndroidInput implements Input, OnTouchListener {
@@ -71,9 +73,8 @@ public class AndroidInput implements Input, OnTouchListener {
                     continue;
                 }
                 // We check what type of action it is.
-                switch (action) {
-                case MotionEvent.ACTION_DOWN:
-                case MotionEvent.ACTION_POINTER_DOWN:
+                if(action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_POINTER_DOWN){
+ //               	Log.w("Debuggin", "We get action down!");
                     touchEvent = touchEventPool.newObject();
                     touchEvent.type = TouchEvent.TOUCH_DOWN;
                     touchEvent.pointer = pointerId;
@@ -82,16 +83,10 @@ public class AndroidInput implements Input, OnTouchListener {
                     isTouched[i] = true;
                     id[i] = pointerId;
                     touchEventsBuffer.add(touchEvent);
-                    break;
-
-                case MotionEvent.ACTION_UP:
-                	v.performClick();
-                	break;
-                case MotionEvent.ACTION_POINTER_UP:
-                	v.performClick();
-                	break;
-                case MotionEvent.ACTION_CANCEL:
-                    touchEvent = touchEventPool.newObject();
+                }else if(action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_POINTER_UP ||
+                		action == MotionEvent.ACTION_CANCEL){
+//                	Log.w("Debuggin", "We get action up or pointer up or cancel for finger!" + pointerId);
+                	touchEvent = touchEventPool.newObject();
                     touchEvent.type = TouchEvent.TOUCH_UP;
                     touchEvent.pointer = pointerId;
                     touchEvent.x = touchX[i] = (int) (event.getX(i) * scaleX);
@@ -99,10 +94,10 @@ public class AndroidInput implements Input, OnTouchListener {
                     isTouched[i] = false;
                     id[i] = -1;
                     touchEventsBuffer.add(touchEvent);
-                    break;
-
-                case MotionEvent.ACTION_MOVE:
-                    touchEvent = touchEventPool.newObject();
+                	v.performClick();                
+                }else if (action == MotionEvent.ACTION_MOVE){
+//                	Log.w("Debuggin", "We get action move!");
+                	touchEvent = touchEventPool.newObject();
                     touchEvent.type = TouchEvent.TOUCH_DRAGGED;
                     touchEvent.pointer = pointerId;
                     touchEvent.x = touchX[i] = (int) (event.getX(i) * scaleX);
@@ -110,7 +105,8 @@ public class AndroidInput implements Input, OnTouchListener {
                     isTouched[i] = true;
                     id[i] = pointerId;
                     touchEventsBuffer.add(touchEvent);
-                    break;
+                }else{
+                	Log.w("Debuggin", "We don't know what type of touch this is!");
                 }
             }
             return true;

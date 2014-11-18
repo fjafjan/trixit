@@ -85,6 +85,11 @@ public class Vector2d {
 		this.y /= d;
 	}
 	
+	public Vector2d normalizeToLength(double r){
+		double d = this.length();
+		return new Vector2d(this.x*r/d, this.y*r/d);
+	}
+	
 	public Vector2d norm(){
 		double d = this.length();
 		return new Vector2d(this.x/d, this.y/d);
