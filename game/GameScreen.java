@@ -129,6 +129,7 @@ public class GameScreen extends Screen {
 				engine.tryTouch(fingers[i].pos);
 			}else{ // else we try dragging
 				engine.tryDrag(fingers[i], deltaTime);
+				fingers[i].printPositions();
 			}
 		}
 		
@@ -178,7 +179,7 @@ public class GameScreen extends Screen {
 				if (fingers[id] != null)
 					Log.w("Debuggin", "Duplicate fingers in da hizzous");
 //					throw new RuntimeException("Duplicate fingers in da hizzous");
-					
+				Log.w("Debuggin", "Adding a new finger.");	
 				fingers[id] =new Finger(event);
 				fingers[id].addEvent(event);
 			}else{
@@ -190,6 +191,7 @@ public class GameScreen extends Screen {
 					fingers[id].addEvent(event);
 				}else if(event.type == TouchEvent.TOUCH_UP){
 					fingers[id].destroy = true;
+					Log.w("Debuggin", "Destroying an unused finger.");
 				}
 			}
 		}
@@ -256,7 +258,7 @@ public class GameScreen extends Screen {
 		return true;
 	}
 	
-	/// Returns the current highscore. If there is no highscore, we create it and set it to 0.
+	/// Returns the current high score. If there is no high score, we create it and set it to 0.
 	private int getHighScore(){		
 		if(settings.contains("highScore")){
 			highScore = settings.getInt("highScore", 0);
@@ -352,9 +354,10 @@ public class GameScreen extends Screen {
     	double FPS = 1000/deltaTime;
     	Graphics g = game.getGraphics();
     	g.drawString("current FPS: " + FPS, gameWidth - 200, gameHeight - 50, paint2);
-    	///Log.w("Debuggin", "current FPS = " + FPS);
     }
     
+    
+    /// Return the current version number of this game. 
     private String getVersion(){
     	String version = "";
 

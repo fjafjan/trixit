@@ -25,8 +25,8 @@ public class Engine {
 	int score, livesleft, highScore;
 	/// Variables that are set once and should not change during a game
 	int gameHeight, gameWidth, maxBalls, addBallScore, noFailScore, minTouchTime;
-	double chanceOfMod, tennisSpeed, forceConstant, dragConstant, slowDown, gravity, friction, momentOfInertia;
-	double startSpeed, startSpin, touchRadius;
+	double chanceOfMod, tennisSpeed, forceConstant, dragConstant, slowDown, gravity, friction, touchRadius;
+	double startSpeed, startSpin, momentOfInertia, clickSpin;
 	double relativeWeight;
 	float volume;
 	
@@ -41,7 +41,8 @@ public class Engine {
 		slowDown = 1;   		/// Linearly slows down the game. 
 		gravity = 0.004;       	/// The gravitational acceleration at every
 		friction = 0.5;			/// The amount of interaction between spin and velocity.
-		momentOfInertia = 0.5;	/// The strength of the interaction between spin and velocity.  
+		momentOfInertia = 0.5;	/// The strength of the interaction between spin and velocity.
+		clickSpin = 0.5;		/// The relative amount of spin a click produces. 
 		startSpeed = 0.1;		/// The initial vertical speed of a new ball.
 		startSpin = 5;			/// The maximum initial spin of a new ball.
 		tennisSpeed = 15;     	/// The initial speed of a tennis ball. 
@@ -59,11 +60,11 @@ public class Engine {
 		balls = new ArrayList<Ball>();				/// The list of all balls in use.
 		addBall();									/// We add the first ball to the game.
 													/// but never drawn or updated etc.
-		balls.get(0).setSlowDown(slowDown);			/// We set the slowdown factor of ALL balls (static)
 		balls.get(0).setGravity(gravity);			/// We set the gravity constant of ALL balls
 		balls.get(0).setMinTouchTime(minTouchTime);	/// The minimum amount of time between touches.
 		balls.get(0).setFriction(friction); 		/// The amount of interaction between spin and velocity.
 		balls.get(0).setInertia(momentOfInertia);	/// The strength of the interaction between spin and vel.
+		balls.get(0).setClickSpin(clickSpin);		/// The amount of spin clicking creates.  
 
 		volume = AudioManager.STREAM_MUSIC;			/// We set the volume of the game to be the 
 													/// current music volume
@@ -78,7 +79,7 @@ public class Engine {
 			DragEvent thisEvent = dragEvents.get(i);
 			ArrayList<TouchEvent> events = thisEvent.getEvents();
 			int end = events.size()-1;
-			// If this drag event has not moved we treat it as a click. 
+			// If this drag event has not moved we treat it as a click.
 			if(events.get(0).x == events.get(end).x && events.get(0).y == events.get(end).y){
 				tryTouch(events.get(0));
 				continue;
@@ -103,15 +104,13 @@ public class Engine {
 		}
 	}
 
+	
+	/// Updates the position of all the balls, and checks if any of them collide.
 	public void updateBalls(double deltaTime){
 
-		
 		double deltaT = deltaTime * slowDown;
-		/// If we have gotten a decent amount of points without messing up we crank it up by adding a ball.
-		if( noFailScore > (addBallScore*balls.size()) ){
-			if(balls.size() < maxBalls)
-				addBall();
-		}
+		/// Checks the score and determines if another ball should be added and if so adds it. 
+		tryAddBall();
 
 		
 		/// Update all regular balls
@@ -144,6 +143,16 @@ public class Engine {
 			if(tennisball.destroy)
 				tennisball = null;
 		}
+	}
+	
+	/// 
+	private void tryAddBall(){
+//		if()
+		if( noFailScore > (addBallScore*balls.size()) ){
+			if(balls.size() < maxBalls)
+				addBall();
+		}
+
 	}
 	
 	/// Creates a new ball, it attempts first to create it at the center of the playing field
@@ -260,11 +269,15 @@ public class Engine {
 
 	}
 
+	/// Sees if the touchevent event intersects with any ball, and if so 
+	/// notifies the ball and increases the score. 
 	public void tryTouch(TouchEvent event){
 		Vector2d pos = new Vector2d(event.x, event.y);
 		tryTouch(pos);
 	}
 	
+	/// Checks if touching at position eventPos intersects with any valid ball
+	/// and if so notifies the ball and updates the score. 
 	public void tryTouch(Vector2d eventPos){
 		int ballTouched = inBall(eventPos.x, eventPos.y, touchRadius); 
 		// If we did not intersect with any ball then we just go back.
@@ -285,11 +298,7 @@ public class Engine {
 			// Plays one of the kick sounds. 
 			playSound(Assets.kicks);
 
-			score += 1;
-			noFailScore += 1;
-			if (tennisball == null && random.nextDouble() < chanceOfMod){
-				addTennisBall();
-			}
+			increaseScore();
 		}
 	}
 	
@@ -306,7 +315,6 @@ public class Engine {
 		// We touched the tennisball
 		if (ballTouched == -2){
 			// Play a special tennisball sound I think. 
-			//double x = startCustomMode(); // think of  abetter name for this and actually do something with it. 
 			tennisball.destroy = true;
 			return;
 		}
@@ -321,7 +329,7 @@ public class Engine {
 			Vector2d startPos = finger.pos.diff(d);
 			Vector2d ballCenterPos = balls.get(ballTouched).getPos();
 			Vector2d f = startPos.diff(ballCenterPos);
-//			double r = (balls.get(ballTouched).getSize()/2) + (touchRadius/2);
+
 			double r = balls.get(ballTouched).getSize();
 			
 			double a = d.dot(d);
@@ -380,6 +388,15 @@ public class Engine {
 		// change vel to represent the real velocity and have breaks elsewhere. 
 	}
 	
+	private void increaseScore(){
+		score += 1;
+		noFailScore += 1;
+		if (tennisball == null && random.nextDouble() < chanceOfMod){
+			addTennisBall();
+		}
+	}
+	
+	
 	// Determines if the position at pos x, y is within a radius of either any ball or
 	// tennis ball. If so, it returns the index of the ball or -2 respectively. If not, 
 	// returns -1.
@@ -393,12 +410,7 @@ public class Engine {
 		if(tennisball != null){
 			double ballSize = tennisball.getSize();
 			Vector2d ballPos = tennisball.getPos();
-			Log.w("Debuggin", "We are checking for collision with the tennisball");
-			Log.w("Debuggin", "The distance from this ball was " + pos.diff(ballPos).length());
-			Log.w("Debuggin", "The tennisball is at pos " + ballPos);
 			if ( pos.diff(ballPos).length()  < ((ballSize/2)  + radius)){
-				Log.w("Debuggin", "Something was inside a tennisball that I am pretty sure is null");
-				Log.w("Debuggin", "Tennisball is at " + tennisball.getPos());
 				return -2;
 			}
 		}
@@ -408,15 +420,13 @@ public class Engine {
 			double ballSize = balls.get(i).getSize();
 			Vector2d ballPos = balls.get(i).getPos();
 			if ( pos.diff(ballPos).length()  < ((ballSize/2)  + radius)){
-//  			double firstDiff = pos.diff(ballPos).length();
-//				double otherDiff = ballPos.diff(pos).length();
-//				Log.w("Debuggin", "we find a collision with ball " + i);
 				return i;
 			}
 		}
 		return -1;
 	}
 	
+	/// Returns if there is a ball within radius at position pos.
 	public int inBall(Vector2d pos, double radius){
 		return inBall(pos.x, pos.y, radius);
 	}

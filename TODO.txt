@@ -1,12 +1,24 @@
+Today:
+	Try to find and fix hold drag issue 
+	NOT ABLE TO ADRESS ON EMULATION
+	Clean up code
+	Remove FPS before pushing
+	Anything else to fix before pushing?		
+	Tweak amount of spin to be appropriate. 
+
+	Add ball-ball spin interaction
+	Change nr of ball score thingy
+	
+
+
 Known issues:
 
 0) Keep tweaking variables
 
 
 Known bugs
-	rapid clicking is once again possible
-	dragging produces much less force than clicking
-	On some devices, holding does not count as a click. 
+	holding still sometimes produces a (weak) drag.
+	dragging is relatively unreliable in the predicted motion. 
 minor bugs
 	Text stuff
 	Sounds
@@ -21,6 +33,8 @@ IMPROVING PERFORMANCE
 	3) See what options exist for profiling. 
 
 2) Fix dragging including spin
+
+
 
 Tomorrow
 1) Add server communication to check "global" high scores. 

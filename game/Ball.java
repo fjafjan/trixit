@@ -13,13 +13,14 @@ public class Ball {
 	private double angle, spin, maxSpin;
 	private int unTouchedTime;
 	
-	private static double slowDown = 1;
 	private static double gravity = 0.2;
 	private static double minTouchTime = 25;
 	private static double momentOfInertia = 0.2;
 	private static double friction = 0.5;
+	private static double clickSpin = 3;
+	private static double maxSpeed = 4;
 	
-	public double size, bounceCoef, weight, clickSpin;
+	public double size, bounceCoef, weight;
 	
 	public Ball(double xPos,double yPos, double xVel, double yVel, double spin){
 		this.pos = new Vector2d(xPos, yPos);
@@ -66,7 +67,7 @@ public class Ball {
 	public void update(double deltaTime){
 		pos.plus( (vel.multret(deltaTime)) );
 		vel.y += gravity * deltaTime;
-		this.angle += spin;
+		this.angle += spin * deltaTime;
 		unTouchedTime += deltaTime;
 	}
 	
@@ -143,9 +144,6 @@ public class Ball {
 		this.weight = w;
 	}
 
-	public void setSlowDown(double slowdown){
-		slowDown = slowdown;
-	}
 
 	public void setInertia(double i){
 		momentOfInertia = i;
@@ -159,18 +157,24 @@ public class Ball {
 	public void setFriction(double f){
 		friction = f;
 	}
+	
+	public void setClickSpin(double s){
+		clickSpin = s;
+	}
 
 	
 	public void setMinTouchTime(int t){
 		minTouchTime = t;
 	}
 	
+	public void setMaxSpeed(double m){
+		maxSpeed = m;
+	}
+	
 	/// Collides this ball with another ball and performs the required velocity changes on both balls.
 	public void collide(Ball otherBall){
 		if(otherBall == null) // If the other ball doens't exist, nothing happens.
 			return;
-//		Log.w("Debuggin", "otherBall is at " + otherBall.pos);
-		// Temporary debugging
 		
 		
 		// Okay so we want to find out the time it took since they actually intersected one another.
@@ -181,14 +185,11 @@ public class Ball {
 		// The distance at which these two balls should collide. 
 		double collideDist = (this.size + otherBall.size) /2;
 
-		//		Log.w("Debuggin", "posDiff is  " + posDiff + " and vellDiff is " + velDiff);
 		
 		// Finds the two times when the balls will be intersecting
 		double[] ts = findCollisionTime(posDiff, velDiff, collideDist);
 		double t1 = ts[0];
 //		double t2 = ts[1];
-		
-//		Log.w("Debuggin", "t1 is " + t1 + " t2 is " + t2);
  
 		if((posDiff.abs() - (size*size))  > 0)
 			Log.w("Debuggin", "!!!!!!!!!!!!!!!!!SOmething is messed up :/ !!!!!!!!!!!!!!!!!!!!!!!");
@@ -245,10 +246,13 @@ public class Ball {
 	}
 	
 	
+	/// Checks if the angle between vec1 and vec2 is less than 180 degrees.
 	private boolean areSameDirection(Vector2d vec1, Vector2d vec2){
 		return (vec1.dot(vec2) >= 0);
 	}
 	
+	/// Finds the time when two balls will collide, given their different positions, velocities 
+	/// and the distance at which they collide. 
 	private double[] findCollisionTime(Vector2d posDiff, Vector2d velDiff, double collideDistance) {
 		double term1 = 2 * posDiff.multPoint(velDiff).sum();
 
@@ -261,9 +265,6 @@ public class Ball {
 		// (2 (k^2+l^2))
 		double frac = 2 * velDiff.abs();
 		
-//		Log.w("Debuggin", "frac is " + frac);
-//		Log.w("Debuggin", "term1 squared is " + (term1*term1) + " and term 2 is " + term2);
-		
 		if( (term1 * term1) < term2){
 			throw new RuntimeException("We are trying to find the colission time of two objects that have not yet collided."); 
 		}
@@ -275,6 +276,7 @@ public class Ball {
 		return ans;
 	}
 	
+	/// Returns if this ball can be touched at this time. 
 	public boolean canBeTouched(){
 		return unTouchedTime > minTouchTime;
 	}
@@ -313,12 +315,12 @@ public class Ball {
 		return true;
 	}
 	
-	/// Returns true if the ball has been clicked too recently. 
 	
 	/// Collides the ball with a swipe from user represented in a list of TouchEvents and an index
 	/// i where the swipe first collided with the ball. deltaTime is the total duration of the swipe.
 	/// Returns if the ball was actually moved or if it was too recent.
 	public boolean drag(Finger finger, int i, double deltaTime){
+		/// Returns true if the ball has been clicked too recently. 
 		if( unTouchedTime < minTouchTime ){
 			Log.w("Debuggin", "We choose to not detect this touch.  ." + vel);
 			return false;
