@@ -324,7 +324,7 @@ public class Engine {
 		}
 		
 		if(balls.get(ballTouched).canBeTouched()){
-			Log.w("Debuggin", "We think that we should have a drag");
+//			Log.w("Debuggin", "We think that we should have a drag");
 			
 			increaseScore();
 			
@@ -372,8 +372,6 @@ public class Engine {
 //				}
 			}
 			
-			Log.w("Debuggin", "The distance from intersection to ball center is " + intersection.diff(startPos).length());
-			Log.w("Debuggin", "The finger velocity is " + finger.vel.length());
 			if(finger.vel.length() * dragConstant < minFingerSpeed){
 				balls.get(ballTouched).click(intersection, forceConstant) ;
 			}else if(finger.vel.length() * dragConstant < maxFingerSpeed){
@@ -381,23 +379,7 @@ public class Engine {
 			}else{
 				balls.get(ballTouched).click(intersection, maxFingerSpeed );
 			}
-			/// We move the new very close to the edge. 
-//			intersection = intersection.diff(finger.vel.normalizeToLength(r));
-//			Ball fingerBall = new Ball(intersection, finger.vel.multret(deltaT));
-//			balls.add(fingerBall);
-//			Log.w("Debuggin", "The velocity of this new ball is " + finger.vel.multret(deltaTime));
-//			Log.w("Debuggin", "The velocity of the old ball is " + balls.get(ballTouched).getVel());
-//			double ballWeight = fingerBall.weight;
-//			fingerBall.setWeight(ballWeight * relativeWeight); // close to max int
-//			balls.get(ballTouched).collide(fingerBall);
-//			balls.get(ballTouched).setVel(balls.get(ballTouched).getVel().multret(0.02)); // A dampening.
-//			fingerBall.collide(balls.get(ballTouched));
 		}
-		
-		// Try to not drag on an existing ball :3
-//		balls.add(fingerBall);
-		// We could try adding this ball to balls and seeing how stupidly fast this becomes. I should
-		// change vel to represent the real velocity and have breaks elsewhere. 
 	}
 	
 	private void increaseScore(){
