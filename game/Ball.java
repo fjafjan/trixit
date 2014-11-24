@@ -32,7 +32,6 @@ public class Ball {
 		unTouchedTime = 0;
 		angle = 0;
 		maxSpin = 40;
-		clickSpin = 3;
 	}
 	
 	
@@ -64,6 +63,7 @@ public class Ball {
 		vel.plus(new Vector2d(forceX/weight, forceY/weight));
 	}
 	
+	/// Updates the position and angle (rotation) of this ball. 
 	public void update(double deltaTime){
 		pos.plus( (vel.multret(deltaTime)) );
 		vel.y += gravity * deltaTime;
@@ -241,6 +241,13 @@ public class Ball {
 		
 		Vector2d newForce = posDiff.multret(massFactor * innerProd / dist); 
 		
+		// We want to add the spin component to their interaction.
+		/// This is just a 90 degrees, aka the normal to the direct vector. 
+//		Vector2d normal = new Vector2d(-posDiff.y, posDiff.x);
+//		double relativeSpin = (this.spin - otherBall.spin)  + (velDiff.cross(posDiff);
+//		normal.normalizeToLength(relativeSpin);
+//		newForce.add(normal.multret(ballbBallFriction * momentOfInertia * )) 
+		
 		vel.minus(newForce);
 		otherBall.updateForce(newForce.multret(this.weight));
 	}
@@ -331,6 +338,7 @@ public class Ball {
 		unTouchedTime = 0;
 		return true;
 	}	
+
 	public boolean drag(ArrayList<TouchEvent> events, int i, double deltaTime){
 		if( unTouchedTime < minTouchTime ){
 			Log.w("Debuggin", "We choose to not detect this touch.  ." + vel);

@@ -26,7 +26,7 @@ public class Engine {
 	/// Variables that are set once and should not change during a game
 	int gameHeight, gameWidth, maxBalls, addBallScore, noFailScore, minTouchTime;
 	double chanceOfMod, tennisSpeed, forceConstant, dragConstant, slowDown, gravity, friction, touchRadius;
-	double startSpeed, startSpin, momentOfInertia, clickSpin;
+	double startSpeed, startSpin, momentOfInertia, clickSpin, maxFingerSpeed, minFingerSpeed;
 	double relativeWeight;
 	float volume;
 	
@@ -35,22 +35,26 @@ public class Engine {
 		// Here we have various options that can be tweaked and adjusted. 
 		livesleft = 3;       	/// The number of bounces on the ground allowed. 
 		chanceOfMod = 0.0;		/// Chance of spawning a tennis ball that in the future will modify the game in some way. 
-		forceConstant = 0.22;	/// Linearly increases the force applied by a click.
-		dragConstant = 0.3;		/// Linearly increases the force applied by a click.
+		forceConstant = 0.18;	/// Linearly increases the force applied by a click.
+		dragConstant = 0.25;	/// Linearly increases the force applied by a swipe.
 		
 		slowDown = 1;   		/// Linearly slows down the game. 
 		gravity = 0.004;       	/// The gravitational acceleration at every
 		friction = 0.5;			/// The amount of interaction between spin and velocity.
-		momentOfInertia = 0.5;	/// The strength of the interaction between spin and velocity.
+		momentOfInertia = 1.4;	/// The strength of the interaction between spin and velocity.
 		clickSpin = 0.5;		/// The relative amount of spin a click produces. 
+		
 		startSpeed = 0.1;		/// The initial vertical speed of a new ball.
-		startSpin = 5;			/// The maximum initial spin of a new ball.
+		startSpin = 0.6;		/// The maximum initial spin of a new ball.
 		tennisSpeed = 15;     	/// The initial speed of a tennis ball. 
-		maxBalls = 1;         	/// The maximum number of balls. 
-		addBallScore = 5;    	/// At each increment of this score another ball is added.
+		maxBalls = 3;         	/// The maximum number of balls. 
+		addBallScore = 10;    	/// At each increment of this score another ball is added.
 		touchRadius = 50;       /// The radius of a touch point for collision detection, aka finger thickness.
 		minTouchTime = 250;
-		relativeWeight = 0.5;	
+		relativeWeight = 0.5;
+		
+		maxFingerSpeed = 0.4;
+		minFingerSpeed = 0.1;
 		
 		// Initialize game object here
 		this.gameWidth = gameWidth;					/// The diagonal of the square... no it's just the width.
@@ -147,8 +151,8 @@ public class Engine {
 	
 	/// 
 	private void tryAddBall(){
-//		if()
-		if( noFailScore > (addBallScore*balls.size()) ){
+//		if( noFailScore > (addBallScore*balls.size()) ){
+		if(score > (addBallScore * ( balls.size() * balls.size()))){
 			if(balls.size() < maxBalls)
 				addBall();
 		}
@@ -247,8 +251,8 @@ public class Engine {
 				overstep = pos.y - maxPosY;
 				ball.bounceY(maxPosY - overstep, 1);
 				balls.remove(ball);
-				if (balls.isEmpty())
-					addBall();
+//				if (balls.size() < score * addBallScore)
+				addBall();
 				noFailScore = 0;
 				livesleft -= 1;
 				if (livesleft <= 0){
@@ -322,6 +326,8 @@ public class Engine {
 		if(balls.get(ballTouched).canBeTouched()){
 			Log.w("Debuggin", "We think that we should have a drag");
 			
+			increaseScore();
+			
 			/// Using the algorithm from http://stackoverflow.com/questions/1073336/circle-line-collision-detection
 			Vector2d d = finger.vel.multret(deltaT);
 			/// We assume that vel represents d, the firection of the vector.
@@ -368,7 +374,13 @@ public class Engine {
 			
 			Log.w("Debuggin", "The distance from intersection to ball center is " + intersection.diff(startPos).length());
 			Log.w("Debuggin", "The finger velocity is " + finger.vel.length());
-			balls.get(ballTouched).click(intersection, finger.vel.multret(dragConstant).length() );
+			if(finger.vel.length() * dragConstant < minFingerSpeed){
+				balls.get(ballTouched).click(intersection, forceConstant) ;
+			}else if(finger.vel.length() * dragConstant < maxFingerSpeed){
+				balls.get(ballTouched).click(intersection, finger.vel.multret(dragConstant).length()) ;
+			}else{
+				balls.get(ballTouched).click(intersection, maxFingerSpeed );
+			}
 			/// We move the new very close to the edge. 
 //			intersection = intersection.diff(finger.vel.normalizeToLength(r));
 //			Ball fingerBall = new Ball(intersection, finger.vel.multret(deltaT));

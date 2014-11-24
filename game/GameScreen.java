@@ -129,7 +129,7 @@ public class GameScreen extends Screen {
 				engine.tryTouch(fingers[i].pos);
 			}else{ // else we try dragging
 				engine.tryDrag(fingers[i], deltaTime);
-				fingers[i].printPositions();
+				//fingers[i].printPositions();
 			}
 		}
 		
@@ -179,7 +179,6 @@ public class GameScreen extends Screen {
 				if (fingers[id] != null)
 					Log.w("Debuggin", "Duplicate fingers in da hizzous");
 //					throw new RuntimeException("Duplicate fingers in da hizzous");
-				Log.w("Debuggin", "Adding a new finger.");	
 				fingers[id] =new Finger(event);
 				fingers[id].addEvent(event);
 			}else{
@@ -191,7 +190,6 @@ public class GameScreen extends Screen {
 					fingers[id].addEvent(event);
 				}else if(event.type == TouchEvent.TOUCH_UP){
 					fingers[id].destroy = true;
-					Log.w("Debuggin", "Destroying an unused finger.");
 				}
 			}
 		}
@@ -210,7 +208,6 @@ public class GameScreen extends Screen {
 	}
 	
 	private void updateGameOver(List<TouchEvent> touchEvents){
-		//
 		
 	}
 	
@@ -222,7 +219,7 @@ public class GameScreen extends Screen {
 			break;
 		case Running:
 			drawRunningUI();
-			printFPS(deltaTime);
+			//printFPS(deltaTime);
 			break;
 		case GameOver:
 			drawGameOverUI();

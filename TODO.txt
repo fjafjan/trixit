@@ -3,7 +3,6 @@ Today:
 	NOT ABLE TO ADRESS ON EMULATION
 	Clean up code
 	Remove FPS before pushing
-	Anything else to fix before pushing?		
 	Tweak amount of spin to be appropriate. 
 
 	Add ball-ball spin interaction
@@ -22,7 +21,7 @@ Known bugs
 minor bugs
 	Text stuff
 	Sounds
-
+	There is a bloat of constants :(
 
 
 DELTA TIME IS ALWAYS A CONSTANT PROBABLY AS A RESULT OF US CHANGING WHAT TIME MEANS

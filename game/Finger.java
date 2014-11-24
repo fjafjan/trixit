@@ -165,12 +165,12 @@ public class Finger {
 		if(averageVel.length() > 0){
 			averageVel.divide( Math.sqrt(averageVel.length()) );
 		}
-		Log.w("Debuggin", "Current finger velocity is " + this.vel.length() + " based on " + oldEvents.size());
+//		Log.w("Debuggin", "Current finger velocity is " + this.vel.length() + " based on " + oldEvents.size());
 
 		this.vel = averageVel;
 		/// TMP DEBUG STUFF
 //		Vector2d old = new Vector2d(oldest.x, oldest.y);
-		Log.w("Debuggin", "Average finger velocity is " + averageVel.length() + " based on " + oldVels.size());
+//		Log.w("Debuggin", "Average finger velocity is " + averageVel.length() + " based on " + oldVels.size());
 		
 	}
 	
