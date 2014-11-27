@@ -22,6 +22,9 @@ public class Ball {
 	
 	public double size, bounceCoef, weight;
 	
+	private double DegreesToRadians = 2 * 3.14159265 / 360.;
+	private double RadiansToDegrees = 1./DegreesToRadians;
+	
 	public Ball(double xPos,double yPos, double xVel, double yVel, double spin){
 		this.pos = new Vector2d(xPos, yPos);
 		this.vel = new Vector2d(xVel, yVel);
@@ -67,47 +70,49 @@ public class Ball {
 	public void update(double deltaTime){
 		pos.plus( (vel.multret(deltaTime)) );
 		vel.y += gravity * deltaTime;
+		if(spin > maxSpin){
+			spin = maxSpin;
+		}
 		this.angle += spin * deltaTime;
 		unTouchedTime += deltaTime;
 	}
 	
+	/// Bounces along the X axis.
 	public void bounceX(double xPos, int side){
-		/// Simple bounce.
 		this.pos.x = xPos;
 		this.vel.x *= -bounceCoef;
 		
-		/// Spin interactions.
-		double relativeVelocity = vel.y + (side * spin); // The relative velocity of the edge of the ball. 
+		/// We compute the relative velocity of the edge of the ball and the wall and
+		/// based on the amount of friction this will result in a force that pushes
+		/// the ball in a vertical direction, and reduces or increases the spin. 
+		double relativeVelocity = vel.y + (side * spin); 
 		double spinFactor = side * ( relativeVelocity * friction );
-		//Log.w("Debuggin", "spinFactor is " + spinFactor);
-		//Log.w("Debuggin", "relativeVelocity is " + relativeVelocity);
-		//Log.w("Debuggin", "spin is " + spin);
 		this.spin -= spinFactor;
 
-		double spinInteractionConsant = 0.5 * 2 * 3.14159265 / 360. ;
-		this.vel.y += size * -spinFactor * side * spinInteractionConsant * friction * momentOfInertia;
+		this.vel.y += size * -spinFactor * side * DegreesToRadians * friction * momentOfInertia;
 
 	}
 	
 	
-	
+	/// Bounces the ball along the Y-axis
 	public void bounceY(double yPos, int side){
 		this.pos.y  = yPos;
 		this.vel.y *= -bounceCoef*0.7;
 		
-		/// Spin interactions.
-		double relativeVelocity = vel.y + (side * spin); // The relative velocity of the edge of the ball. 
-		double spinFactor = side * ( relativeVelocity * friction ); /// BETTER NAME NEEDED
+		/// We compute the relative velocity of the edge of the ball and the wall and
+		/// based on the amount of friction this will result in a force that pushes
+		/// the ball in a horizontal direction, and reduces or increases the spin. 
+		double relativeVelocity = vel.y + (side * spin);  
+		double spinFactor = side * ( relativeVelocity * friction ); 
 		this.spin -= spinFactor;
 		
-		double spinInteractionConsant = 0.5 * 2 * 3.14159265 / 360. ;
-
-		this.vel.x += size * spinFactor * side * spinInteractionConsant * friction * momentOfInertia;
-		
+		this.vel.x += size * spinFactor * side * DegreesToRadians * friction * momentOfInertia;
 	}
 	
 	// These functions return a copy vector in order to avoid another routine tampering 
 	// with these values in unexpected ways.
+
+	
 	public Vector2d getPos(){
 		return new Vector2d(pos);
 	}
@@ -176,12 +181,19 @@ public class Ball {
 		if(otherBall == null) // If the other ball doens't exist, nothing happens.
 			return;
 		
+		/// This method works in a few steps, maybe it should be refactored further into smaller methods.
+		/// First we  finds the distance between this ball and the other ball, and the relative velocity.
 		
-		// Okay so we want to find out the time it took since they actually intersected one another.
-		// The relative positions of the two balls.
+		
+		// We then given their positions and velocities we
+		// find the times ts = t1, t2 relative to now when the two balls were exactly intersecting
+		// We then move both balls back to the earlier step t1 this step so that the balls dont get
+		// stuck in one another. After that we solve newtons equations, not including spin and find 
+		// the velocities resulting from the collision.
+
 		Vector2d posDiff = this.pos.diff(otherBall.getPos());
-		// The relative velocity of the two balls
 		Vector2d velDiff = this.vel.diff(otherBall.getVel());
+		
 		// The distance at which these two balls should collide. 
 		double collideDist = (this.size + otherBall.size) /2;
 
@@ -190,13 +202,10 @@ public class Ball {
 		double[] ts = findCollisionTime(posDiff, velDiff, collideDist);
 		double t1 = ts[0];
 //		double t2 = ts[1];
- 
+ /// TRY CHANGING THIS AND SEE IF IT DOESNT CRASH IT SHOULD BUT LETS TRY
 		if((posDiff.abs() - (size*size))  > 0)
 			Log.w("Debuggin", "!!!!!!!!!!!!!!!!!SOmething is messed up :/ !!!!!!!!!!!!!!!!!!!!!!!");
 
-		// Okay so we have correctly found t. now we want to first virtually move the balls back to where
-		// they should have collided. 		
-//		Log.w("Debuggin", "The times that work are " + t1 + " and " + t2);
 		pos = pos.add(vel.multret(t1));
 		otherBall.setPos(otherBall.getPos().add(otherBall.getVel().multret(t1)));
 		posDiff = this.pos.diff(otherBall.getPos());
@@ -219,6 +228,8 @@ public class Ball {
 		
 		
 		// We check if the current relative velocities will bring the balls further apart or not.
+		// This lets us avoid infinite collision loops as balls moving away from one another will 
+		// keep moving. 
 		if(areSameDirection(posDiff, velDiff)) {
 			Log.w("Debuggin", "We think this is not a good colission to do ");
 			return; // We don't perform a colission since they will separate naturally.
@@ -300,16 +311,10 @@ public class Ball {
 		
 		vel = force.multret(forceConstant / weight);
 		
-		// Let's add the force component from the spin.
-		// 0.5 ~= 1/5
-		/// And the existing spin causes some horizontal movement
-		/// 0.5 is half the diameter, the rest is just from degrees to radians. 
-		double spinInteractionConsant = 0.5 * 2 * 3.14159265 / 360.;
-		this.vel.x += size * spin * spinInteractionConsant * friction * momentOfInertia;
+		/// Spin interaction constant is the conversation from radians to degrees as well
+		this.vel.x += size * spin * DegreesToRadians * friction * momentOfInertia;
 		this.spin -= spin * friction;
 		
-		/// Break the force into one component 
-		/// We add some spin
 		
 		/// This is the normal vector of the surface where we kick
 		Vector2d normal = pos.diff(clickPos);
@@ -318,7 +323,6 @@ public class Ball {
 		double spinIncremenent = new Vector2d(0,-1).dot(spinVec) * -clickSpin; 
 		this.spin += spinIncremenent;
 		
-		//Log.w("Debuggin", "We touch the ball, the resulting spin is" + force.x * clickSpin + " total spin is" + spin);
 		return true;
 	}
 	
@@ -339,37 +343,4 @@ public class Ball {
 		return true;
 	}	
 
-	public boolean drag(ArrayList<TouchEvent> events, int i, double deltaTime){
-		if( unTouchedTime < minTouchTime ){
-			Log.w("Debuggin", "We choose to not detect this touch.  ." + vel);
-			return false;
-		}
-		// We haven\t recently been touched, so we proceed with touching.
-		// The position of impact
-		Vector2d touchPos = new Vector2d(events.get(i).x,events.get(i).y);
-		// The starting point of this drag/swipe
-		Vector2d initalPos = new Vector2d(events.get(0).x,events.get(0).y);
-		Vector2d endPos = new Vector2d(events.get(events.size()-1).x,events.get(events.size()-1).y);
-		// The direction of the swipe is assumed to be straight and linear.
-		Vector2d dragVel = endPos.diff(initalPos);
-		dragVel.divide(deltaTime);
-		
-		// The vector from the ball and the touchPoint
-		Vector2d touchDir = touchPos.diff(pos);
-		touchDir.normalize();
-		
-		// Create a virtual ball that is adjacent to this ball in direction
-		// of the touch.
-//		touchDir.mult(size * 2);
-		updateForce(touchDir.multret(-dragVel.length()/15));
-//		Vector2d vBallPos = pos.add(touchDir);
-//		Ball virtualBall = new Ball(vBallPos, dragVel);
-//		Log.w("Debuggin", "Before colissions vel is ." + vel);
-//		this.collide(virtualBall);
-//		Log.w("Debuggin", "after colissions vel is ." + vel);
-		// Remove the virtual ball.
-//		virtualBall = null;
-		unTouchedTime = 0;
-		return true;		
-	}
 }

@@ -39,9 +39,9 @@ public class Engine {
 		dragConstant = 0.25;	/// Linearly increases the force applied by a swipe.
 		
 		slowDown = 1;   		/// Linearly slows down the game. 
-		gravity = 0.004;       	/// The gravitational acceleration at every
+		gravity = 0.004;       	/// The gravitational acceleration.
 		friction = 0.5;			/// The amount of interaction between spin and velocity.
-		momentOfInertia = 1.4;	/// The strength of the interaction between spin and velocity.
+		momentOfInertia = 0.7;	/// The strength of the interaction between spin and velocity.
 		clickSpin = 0.5;		/// The relative amount of spin a click produces. 
 		
 		startSpeed = 0.2;		/// The initial vertical speed of a new ball.
@@ -203,9 +203,7 @@ public class Engine {
 			ball.bounceY(minPosY + overstep, -1);
 		}else if(pos.y > maxPosY){
 			if(ball instanceof TennisBall){
-				// Destroy the tennisball
 				tennisball.destroy = true;
-				Log.w("Debuggin", "We are destroying the tennisball at position" + tennisball.getPos());
 			}else if(ball instanceof Ball){
 				balls.remove(ball);
 //				if (balls.size() < score * addBallScore)
@@ -245,19 +243,18 @@ public class Engine {
 			return;
 		}
 		
-		// We touched the tennisball
+		// We touched the tennis ball
 		if (ballTouched == -2){
 			// Play a special tennisball sound I think. 
-			//double x = startCustomMode(); // think of  abetter name for this and actually do something with it. 
 			tennisball.destroy = true;
 			return;
 		}
-				
+		
+		
 		if(balls.get(ballTouched).canBeTouched()){
 			balls.get(ballTouched).click(eventPos, forceConstant);
 			// Plays one of the kick sounds. 
 			playSound(Assets.kicks);
-
 			increaseScore();
 		}
 	}
@@ -274,19 +271,16 @@ public class Engine {
 		
 		// We touched the tennisball
 		if (ballTouched == -2){
-			// Play a special tennisball sound I think. 
 			tennisball.destroy = true;
 			return;
 		}
 		
 		if(balls.get(ballTouched).canBeTouched()){
-//			Log.w("Debuggin", "We think that we should have a drag");
-			
 			increaseScore();
 			
 			/// Using the algorithm from http://stackoverflow.com/questions/1073336/circle-line-collision-detection
 			Vector2d d = finger.vel.multret(deltaT);
-			/// We assume that vel represents d, the firection of the vector.
+			/// We assume that vel represents d, the direction of the vector.
 			
 			Vector2d startPos = finger.pos.diff(d);
 			Vector2d ballCenterPos = balls.get(ballTouched).getPos();
@@ -302,7 +296,6 @@ public class Engine {
 			
 			if(discriminant < 0){	
 				// No intersection
-				Log.w("Debuggin", "Discriminant determines we have no collisiion");
 				return;
 			}else{
 				discriminant = Math.sqrt(discriminant);

@@ -109,8 +109,7 @@ public class GameScreen extends Screen {
 		if (touchEvents.size() > 0){
 			Log.w("Debuggin", "Game is now running");
 			engine.state = GameState.Running;
-		}
-		
+		}		
 	}
 
 	private void updateRunning(List<TouchEvent> touchEvents, double deltaTime) {
@@ -129,40 +128,8 @@ public class GameScreen extends Screen {
 				engine.tryTouch(fingers[i].pos);
 			}else{ // else we try dragging
 				engine.tryDrag(fingers[i], deltaTime);
-				//fingers[i].printPositions();
 			}
-		}
-		
-		
-		//ArrayList<DragEvent> dragEvents = new ArrayList<DragEvent>();
-		// Change this to be a class member instead of function variable.  
-//		for (int i = 0; i < len; i++) {
-		//	TouchEvent event = touchEvents.get(i);
-		//	if (event.type == TouchEvent.TOUCH_DOWN){
-		//		engine.tryTouch(event); /// We check if this touch affects a ball.
-		//	}else if(event.type == TouchEvent.TOUCH_DRAGGED){
-		//		if(dragEvents.isEmpty()){
-		//			dragEvents.add(new DragEvent(event));
-		//		}else{
-		//			boolean assigned = false;
-		//			for (int j = 0; j < dragEvents.size(); j++) {
-		//				if(dragEvents.get(j).id == event.pointer){
-		//					dragEvents.get(j).addEvent(event);
-		//					assigned = true;
-		//				}
-		//			}
-					/// If there was no other drag event associated with
-		//			if(!assigned){
-		//				dragEvents.add(new DragEvent(event));
-		//			}
-		//		}
-					// Hopefully all the drag events from one finger appear at least in sequence. 
-		//	}
-		//}		
-		// We have checked all our touch events.
-		//engine.collideDragEvents(dragEvents, deltaTime);
-		// Moves all balls forward in time and checks for collisions.
-		
+		}		
 		
 		// Removes any fingers that have been lifted. 
 		cleanFingers();
@@ -201,15 +168,16 @@ public class GameScreen extends Screen {
 			if(fingers[i] != null){
 				if (fingers[i].destroy){
 					fingers[i] = null;
-//					Log.w("Debuggin", "We have destroyed finger " + i);
 				}
 			}
 		}
 	}
 	
+
 	private void updateGameOver(List<TouchEvent> touchEvents){
 		
 	}
+	
 	
 	@Override
 	public void paint(float deltaTime) {
@@ -234,9 +202,9 @@ public class GameScreen extends Screen {
 		System.gc();
 	}
 
+	
 	private void drawReadyUI() {
 		Graphics g = game.getGraphics();
-
 		g.drawString("Click to begin", gameWidth/2, gameHeight/2, paint);
 	}
 

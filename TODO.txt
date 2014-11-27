@@ -1,4 +1,8 @@
 Today:
+	Code cleanup!
+		Fix inconsistencies with spin constants in ball class
+		
+
 	Add ball-ball spin interaction
 	
 

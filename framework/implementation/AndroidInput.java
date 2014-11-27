@@ -74,7 +74,6 @@ public class AndroidInput implements Input, OnTouchListener {
                 }
                 // We check what type of action it is.
                 if(action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_POINTER_DOWN){
- //               	Log.w("Debuggin", "We get action down!");
                     touchEvent = touchEventPool.newObject();
                     touchEvent.type = TouchEvent.TOUCH_DOWN;
                     touchEvent.pointer = pointerId;
@@ -85,7 +84,6 @@ public class AndroidInput implements Input, OnTouchListener {
                     touchEventsBuffer.add(touchEvent);
                 }else if(action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_POINTER_UP ||
                 		action == MotionEvent.ACTION_CANCEL){
-//                	Log.w("Debuggin", "We get action up or pointer up or cancel for finger!" + pointerId);
                 	touchEvent = touchEventPool.newObject();
                     touchEvent.type = TouchEvent.TOUCH_UP;
                     touchEvent.pointer = pointerId;
@@ -96,7 +94,6 @@ public class AndroidInput implements Input, OnTouchListener {
                     touchEventsBuffer.add(touchEvent);
                 	v.performClick();                
                 }else if (action == MotionEvent.ACTION_MOVE){
-//                	Log.w("Debuggin", "We get action move!");
                 	touchEvent = touchEventPool.newObject();
                     touchEvent.type = TouchEvent.TOUCH_DRAGGED;
                     touchEvent.pointer = pointerId;
