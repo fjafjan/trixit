@@ -76,37 +76,6 @@ public class Engine {
 	}
 	
 
-	public void collideDragEvents(ArrayList<DragEvent> dragEvents, double deltaTime) {
-		// If we have multiple dragEvents we check each
-		for (int i = 0; i < dragEvents.size(); i++) {
-			// For each such dragEvent we look at each "click"
-			DragEvent thisEvent = dragEvents.get(i);
-			ArrayList<TouchEvent> events = thisEvent.getEvents();
-			int end = events.size()-1;
-			// If this drag event has not moved we treat it as a click.
-			if(events.get(0).x == events.get(end).x && events.get(0).y == events.get(end).y){
-				tryTouch(events.get(0));
-				continue;
-			}
-							
-			for (int j = 0; j < events.size(); j++) {
-				int ballTouched = inBall(events.get(j).x, events.get(j).y, touchRadius);
-				if (ballTouched == -2){
-					tennisball.destroy = true;
-				}else if (ballTouched != -1){
-					// Make sure that this ball has not collided with this swipe before.
-					Log.w("Debuggin", "Get swope.");
-					// Tries to swipe the ball, will return false if too recent.
-					if (balls.get(ballTouched).drag(events, j, deltaTime)){
-						score += 1;
-						noFailScore += 1;
-					}
-				}
-			}
-			
-			
-		}
-	}
 
 	
 	/// Updates the position of all the balls, and checks if any of them collide.
@@ -122,22 +91,11 @@ public class Engine {
 			balls.get(i).update(deltaT);
 			Vector2d pos = balls.get(i).getPos();
 			// We check for collisions
-			
-			// Log.w("Debuggin", "Ball " + i + " is at " + balls.get(i).getPos());
-			
 			Ball collidedWith = inBall(pos, balls.get(i));
 			balls.get(i).collide(collidedWith);
+
+			/// Check if a ball hits a wall.
 			checkEdges(balls.get(i));			
-//			int collidedWith = inBall(pos, balls.get(i).getSize()/2.);
-//			if( collidedWith != -1 && collidedWith != i){
-//				if(collidedWith == -2){
-//					Log.w("Debuggin", "We are colliding tennisball");
-//					balls.get(i).collide(tennisball);
-//				}else if(collidedWith < i){
-//					balls.get(i).collide(balls.get(collidedWith));
-//				}
-//			}
-			/// We handle edge cases where the ball collides with a wall below.
 		}
 
 		/// If we have a tennisball, update that too.
@@ -149,7 +107,7 @@ public class Engine {
 		}
 	}
 	
-	/// 
+	/// Attempts to add a ball to the system, does nothing if score is not high enough.
 	private void tryAddBall(){
 //		if( noFailScore > (addBallScore*balls.size()) ){
 		if(score > (addBallScore * ( balls.size() * balls.size()))){
@@ -166,6 +124,7 @@ public class Engine {
 		noFailScore = 0;
 		double ballSize = new Ball(0,0,0,0).getSize();
 		double initialSpin = 2 * (random.nextDouble() - 0.5) * startSpin;
+		
 		/// If there are no balls, or if the space we want to spawn a ball is empty.
 		/// Note that we could actually use half the ballSize here, but making sure that 
 		/// the new ball doens't immediately collide with an existing ball seems like a nice 
@@ -174,6 +133,7 @@ public class Engine {
 			balls.add(new Ball(gameWidth/2, gameHeight/2, 0, -startSpeed, initialSpin));
 			return;
 		}
+		
 		/// There is a ball "blocking" the default spawn.
 		for(int attempts = 0; attempts < 100 ; attempts++){
 			double testX = random.nextDouble() * gameWidth;
@@ -216,7 +176,6 @@ public class Engine {
 // Checks if a ball with index ballIndex is outside the game area and if so
 // call the correct bounce method. 
 	private void checkEdges(Ball ball){
-//		Ball ball = balls.get(ballIndex);
 		Vector2d pos = ball.getPos();
 		double ballSize = ball.getSize();
 		
@@ -225,14 +184,15 @@ public class Engine {
 		double maxPosX = gameWidth - (ballSize/2);
 		double maxPosY = gameHeight - (ballSize/2);
 		
-		// over step represent the amount the ball has went outside the
+		// over step represent the amount the ball has went outside the game area.
 		double overstep = 0;
-		// game area.
-		if(pos.x < minPosX){ // Left side
+		
+		// Left side
+		if(pos.x < minPosX){ 
 			overstep = (minPosX - pos.x);
 			ball.bounceX(ballSize/2 + overstep, -1 );
-		/// If the ball edge goes outside the right wall
-		}else if(pos.x > maxPosX){ // Right side	 
+		/// Right side
+		}else if(pos.x > maxPosX){	 
 			overstep = (pos.x - maxPosX);
 			ball.bounceX(maxPosX - overstep, 1);
 		}
@@ -241,22 +201,18 @@ public class Engine {
 		if(pos.y < minPosY){
 			overstep = minPosY - pos.y;
 			ball.bounceY(minPosY + overstep, -1);
-		/// If the edge of the ball goes outside the floor
 		}else if(pos.y > maxPosY){
 			if(ball instanceof TennisBall){
 				// Destroy the tennisball
 				tennisball.destroy = true;
 				Log.w("Debuggin", "We are destroying the tennisball at position" + tennisball.getPos());
 			}else if(ball instanceof Ball){
-				overstep = pos.y - maxPosY;
-				ball.bounceY(maxPosY - overstep, 1);
 				balls.remove(ball);
 //				if (balls.size() < score * addBallScore)
 				addBall();
 				noFailScore = 0;
 				livesleft -= 1;
 				if (livesleft <= 0){
-					Log.w("Debuggin", "Game is over :(");
 					state = GameState.GameOver;
 				}
 			}else{
