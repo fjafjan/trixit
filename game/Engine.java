@@ -44,14 +44,14 @@ public class Engine {
 		momentOfInertia = 1.4;	/// The strength of the interaction between spin and velocity.
 		clickSpin = 0.5;		/// The relative amount of spin a click produces. 
 		
-		startSpeed = 0.1;		/// The initial vertical speed of a new ball.
+		startSpeed = 0.2;		/// The initial vertical speed of a new ball.
 		startSpin = 0.6;		/// The maximum initial spin of a new ball.
 		tennisSpeed = 15;     	/// The initial speed of a tennis ball. 
 		maxBalls = 3;         	/// The maximum number of balls. 
 		addBallScore = 10;    	/// At each increment of this score another ball is added.
 		touchRadius = 50;       /// The radius of a touch point for collision detection, aka finger thickness.
 		minTouchTime = 250;
-		relativeWeight = 0.5;
+		relativeWeight = 0.5;	
 		
 		maxFingerSpeed = 0.4;
 		minFingerSpeed = 0.1;
