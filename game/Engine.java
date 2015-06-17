@@ -20,7 +20,7 @@ public class Engine {
 
 	List<Ball> balls;
 	TennisBall tennisball;
-	
+		
 	/// Variables that change during the course of a game.
 	int score, livesleft, highScore;
 	/// Variables that are set once and should not change during a game

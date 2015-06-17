@@ -1,5 +1,11 @@
 package com.trixit.framework.implementation;
 
+// This class is the observer for touches on the screen.
+// It stores any touchEvents in between queries, and then removes.
+// 
+
+
+
 import java.util.List;
 import java.util.ArrayList;
 
@@ -18,6 +24,8 @@ import com.trixit.framework.Input;
 import com.trixit.game.Finger;
 
 // Now replaces the "touchHandler" class in the example since I don't care about single touch devices.
+
+
 public class AndroidInput implements Input, OnTouchListener {
     private static final int MAX_TOUCHPOINTS = 2;    	
     
