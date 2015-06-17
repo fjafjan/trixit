@@ -21,7 +21,11 @@ public class Engine {
 	List<Ball> balls;
 	TennisBall tennisball;
 	
+	/// Contains all options and settings that modify the physics and behaviour of the game. 
 	Options options;
+	
+	// Controls all the physics and actions of the balls.
+	Physics physics;
 	
 	/// Variables that change during the course of a game.
 	int score, livesleft, highScore;
@@ -62,12 +66,12 @@ public class Engine {
 
 	
 	/// Updates the position of all the balls, and checks if any of them collide.
-	public void updateBalls(double deltaTime){
+	public void updateGame(double deltaTime){
 
 		double deltaT = deltaTime * options.slowDown;
 		/// Checks the score and determines if another ball should be added and if so adds it. 
 		tryAddBall();
-
+		physics.updateBalls(balls, deltaT);
 		
 		/// Update all regular balls
 		for(int i=0 ; i < balls.size() ; i++){
