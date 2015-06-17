@@ -13,7 +13,9 @@ import com.trixit.framework.Input.TouchEvent;
 import com.trixit.game.GameScreen.GameState;
 
 
-/// This class handles all the game logic of balls, collisions and touches. 
+/// This class handles all the physics engine type stuff, balls moving, colliding and
+/// the impact of touching and swiping on the screen. It also keeps track of the game score
+/// and when to make a sound. 
 public class Engine {
 	Random random = new Random();
 	GameState state = GameState.Ready;
@@ -45,14 +47,9 @@ public class Engine {
 		balls = new ArrayList<Ball>();				/// The list of all balls in use.
 		addBall();									/// We add the first ball to the game.
 													/// but never drawn or updated etc.
-		// We should move this to an option class or some such instead too I think.
 		
-		balls.get(0).configureOptions(options);
-//		balls.get(0).setGravity(gravity);			/// We set the gravity constant of ALL balls
-//		balls.get(0).setMinTouchTime(minTouchTime);	/// The minimum amount of time between touches.
-//		balls.get(0).setFriction(friction); 		/// The amount of interaction between spin and velocity.
-//		balls.get(0).setInertia(momentOfInertia);	/// The strength of the interaction between spin and vel.
-//		balls.get(0).setClickSpin(clickSpin);		/// The amount of spin clicking creates.  
+		
+		balls.get(0).configureOptions(options);     /// We set gravity, friction, etc of the balls.
 
 		volume = AudioManager.STREAM_MUSIC;			/// We set the volume of the game to be the 
 													/// current music volume
@@ -63,8 +60,10 @@ public class Engine {
 	
 	/// Updates the position of all the balls, and checks if any of them collide.
 	public void updateBalls(double deltaTime){
-
+		/// Increments time. 
 		double deltaT = deltaTime * options.slowDown;
+		
+		
 		/// Checks the score and determines if another ball should be added and if so adds it. 
 		tryAddBall();
 
