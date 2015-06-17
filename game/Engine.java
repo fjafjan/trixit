@@ -20,41 +20,22 @@ public class Engine {
 
 	List<Ball> balls;
 	TennisBall tennisball;
-		
+	
+	Options options;
+	
 	/// Variables that change during the course of a game.
 	int score, livesleft, highScore;
 	/// Variables that are set once and should not change during a game
 	int gameHeight, gameWidth, maxBalls, addBallScore, noFailScore, minTouchTime;
-	double chanceOfMod, tennisSpeed, forceConstant, dragConstant, slowDown, gravity, friction, touchRadius;
-	double startSpeed, startSpin, momentOfInertia, clickSpin, maxFingerSpeed, minFingerSpeed;
-	double relativeWeight;
 	float volume;
 	
 
 	public Engine(int gameWidth, int gameHeight){
 		// Here we have various options that can be tweaked and adjusted. 
 		livesleft = 3;       	/// The number of bounces on the ground allowed. 
-		chanceOfMod = 0.0;		/// Chance of spawning a tennis ball that in the future will modify the game in some way. 
-		forceConstant = 0.18;	/// Linearly increases the force applied by a click.
-		dragConstant = 0.25;	/// Linearly increases the force applied by a swipe.
 		
-		slowDown = 1;   		/// Linearly slows down the game. 
-		gravity = 0.004;       	/// The gravitational acceleration.
-		friction = 0.5;			/// The amount of interaction between spin and velocity.
-		momentOfInertia = 0.7;	/// The strength of the interaction between spin and velocity.
-		clickSpin = 0.5;		/// The relative amount of spin a click produces. 
-		
-		startSpeed = 0.2;		/// The initial vertical speed of a new ball.
-		startSpin = 0.6;		/// The maximum initial spin of a new ball.
-		tennisSpeed = 15;     	/// The initial speed of a tennis ball. 
-		maxBalls = 3;         	/// The maximum number of balls. 
-		addBallScore = 10;    	/// At each increment of this score another ball is added.
-		touchRadius = 50;       /// The radius of a touch point for collision detection, aka finger thickness.
-		minTouchTime = 250;
-		relativeWeight = 0.5;	
-		
-		maxFingerSpeed = 0.4;
-		minFingerSpeed = 0.1;
+		// Initializes an Options object, to tweak em go there. 
+		this.options = new Options();
 		
 		// Initialize game object here
 		this.gameWidth = gameWidth;					/// The diagonal of the square... no it's just the width.
@@ -64,15 +45,17 @@ public class Engine {
 		balls = new ArrayList<Ball>();				/// The list of all balls in use.
 		addBall();									/// We add the first ball to the game.
 													/// but never drawn or updated etc.
-		balls.get(0).setGravity(gravity);			/// We set the gravity constant of ALL balls
-		balls.get(0).setMinTouchTime(minTouchTime);	/// The minimum amount of time between touches.
-		balls.get(0).setFriction(friction); 		/// The amount of interaction between spin and velocity.
-		balls.get(0).setInertia(momentOfInertia);	/// The strength of the interaction between spin and vel.
-		balls.get(0).setClickSpin(clickSpin);		/// The amount of spin clicking creates.  
+		// We should move this to an option class or some such instead too I think.
+		
+		balls.get(0).configureOptions(options);
+//		balls.get(0).setGravity(gravity);			/// We set the gravity constant of ALL balls
+//		balls.get(0).setMinTouchTime(minTouchTime);	/// The minimum amount of time between touches.
+//		balls.get(0).setFriction(friction); 		/// The amount of interaction between spin and velocity.
+//		balls.get(0).setInertia(momentOfInertia);	/// The strength of the interaction between spin and vel.
+//		balls.get(0).setClickSpin(clickSpin);		/// The amount of spin clicking creates.  
 
 		volume = AudioManager.STREAM_MUSIC;			/// We set the volume of the game to be the 
 													/// current music volume
-		
 	}
 	
 
@@ -81,7 +64,7 @@ public class Engine {
 	/// Updates the position of all the balls, and checks if any of them collide.
 	public void updateBalls(double deltaTime){
 
-		double deltaT = deltaTime * slowDown;
+		double deltaT = deltaTime * options.slowDown;
 		/// Checks the score and determines if another ball should be added and if so adds it. 
 		tryAddBall();
 
@@ -123,14 +106,14 @@ public class Engine {
 	private void addBall(){
 		noFailScore = 0;
 		double ballSize = new Ball(0,0,0,0).getSize();
-		double initialSpin = 2 * (random.nextDouble() - 0.5) * startSpin;
+		double initialSpin = 2 * (random.nextDouble() - 0.5) * options.startSpin;
 		
 		/// If there are no balls, or if the space we want to spawn a ball is empty.
 		/// Note that we could actually use half the ballSize here, but making sure that 
 		/// the new ball doens't immediately collide with an existing ball seems like a nice 
 		/// idea. 
 		if (balls.isEmpty() || inBall(gameWidth/2, gameHeight/2, ballSize) == -1){
-			balls.add(new Ball(gameWidth/2, gameHeight/2, 0, -startSpeed, initialSpin));
+			balls.add(new Ball(gameWidth/2, gameHeight/2, 0, -options.startSpeed, initialSpin));
 			return;
 		}
 		
@@ -139,7 +122,7 @@ public class Engine {
 			double testX = random.nextDouble() * gameWidth;
 			double testY = ((random.nextDouble()*0.5) - 0.5 ) * gameHeight;	
 			if (inBall(testX, testY, ballSize) == -1){
-				balls.add(new Ball(testX, testY, 0, -startSpeed, initialSpin));
+				balls.add(new Ball(testX, testY, 0, -options.startSpeed, initialSpin));
 				return;
 			}
 		}
@@ -150,7 +133,7 @@ public class Engine {
 	/// initial speed, tennisSpeed. 
 	private void addTennisBall(){
 		double ballSize = new TennisBall(0,0,0,0).getSize();
-		double initialSpin = 2 * (random.nextDouble() - 0.5) * startSpin;
+		double initialSpin = 2 * (random.nextDouble() - 0.5) * options.startSpin;
 		
 		for(int attempts = 0; attempts < 100 ; attempts++){
 			
@@ -161,8 +144,8 @@ public class Engine {
 			if (inBall((int)testX, (int) testY, ballSize) == -1){
 				// To actually get a random angle distribution we should sample the angle
 				double velAngle = random.nextDouble()*2*3.1415926535;
-				double velX = Math.sin(velAngle) * tennisSpeed;
-				double velY = Math.cos(velAngle) * tennisSpeed;
+				double velX = Math.sin(velAngle) * options.tennisSpeed;
+				double velY = Math.cos(velAngle) * options.tennisSpeed;
 				
 				tennisball = new TennisBall(testX,testY,velX,velY, initialSpin);
 				
@@ -237,7 +220,7 @@ public class Engine {
 	/// Checks if touching at position eventPos intersects with any valid ball
 	/// and if so notifies the ball and updates the score. 
 	public void tryTouch(Vector2d eventPos){
-		int ballTouched = inBall(eventPos.x, eventPos.y, touchRadius); 
+		int ballTouched = inBall(eventPos.x, eventPos.y, options.touchRadius); 
 		// If we did not intersect with any ball then we just go back.
 		if (ballTouched == -1){
 			return;
@@ -252,7 +235,7 @@ public class Engine {
 		
 		
 		if(balls.get(ballTouched).canBeTouched()){
-			balls.get(ballTouched).click(eventPos, forceConstant);
+			balls.get(ballTouched).click(eventPos, options.forceConstant);
 			// Plays one of the kick sounds. 
 			playSound(Assets.kicks);
 			increaseScore();
@@ -260,9 +243,9 @@ public class Engine {
 	}
 	
 	public void tryDrag(Finger finger, double deltaTime){
-		double deltaT = deltaTime * slowDown;
+		double deltaT = deltaTime * options.slowDown;
 		/// What do we want drag to do? I really want to try the infinite weight idea.
-		int ballTouched = inBall(finger.pos, touchRadius);
+		int ballTouched = inBall(finger.pos, options.touchRadius);
 		
 		// If we did not intersect with any ball then we just go back.
 		if (ballTouched == -1){
@@ -321,12 +304,16 @@ public class Engine {
 //				}
 			}
 			
-			if(finger.vel.length() * dragConstant < minFingerSpeed){
-				balls.get(ballTouched).click(intersection, forceConstant) ;
-			}else if(finger.vel.length() * dragConstant < maxFingerSpeed){
-				balls.get(ballTouched).click(intersection, finger.vel.multret(dragConstant).length()) ;
+			// If the finger is moving too slowly, we give it a predetermined push.
+			// If the finger is moving too fast, we also give it a larger predetermined push
+			// otherwise we base the push on the speed of the finger. 
+			// I believe the math here is still broken. it is def to be fixed in a future update
+			if(finger.vel.length() * options.dragConstant < options.minFingerSpeed){
+				balls.get(ballTouched).click(intersection, options.forceConstant) ;
+			}else if(finger.vel.length() * options.dragConstant < options.maxFingerSpeed){
+				balls.get(ballTouched).click(intersection, finger.vel.multret(options.dragConstant).length()) ;
 			}else{
-				balls.get(ballTouched).click(intersection, maxFingerSpeed );
+				balls.get(ballTouched).click(intersection, options.maxFingerSpeed );
 			}
 		}
 	}
@@ -334,7 +321,7 @@ public class Engine {
 	private void increaseScore(){
 		score += 1;
 		noFailScore += 1;
-		if (tennisball == null && random.nextDouble() < chanceOfMod){
+		if (tennisball == null && random.nextDouble() < options.chanceOfMod){
 			addTennisBall();
 		}
 	}

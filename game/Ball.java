@@ -149,29 +149,16 @@ public class Ball {
 		this.weight = w;
 	}
 
-
-	public void setInertia(double i){
-		momentOfInertia = i;
+	/// Sets a number of static variables that determine the physics and behaviour of
+	/// all balls. 
+	public void configureOptions(Options options){
+		momentOfInertia = options.momentOfInertia;
+		gravity = options.gravity;
+		friction = options.friction;
+		clickSpin = options.clickSpin;
+		minTouchTime = options.minTouchTime;
 	}
 
-	
-	public void setGravity(double g){
-		gravity = g;
-	}
-
-	public void setFriction(double f){
-		friction = f;
-	}
-	
-	public void setClickSpin(double s){
-		clickSpin = s;
-	}
-
-	
-	public void setMinTouchTime(int t){
-		minTouchTime = t;
-	}
-	
 	public void setMaxSpeed(double m){
 		maxSpeed = m;
 	}
